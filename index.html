@@ -4,8 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Meu Treino</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FF5C3A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meu Treino">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF5C3A'/%3E%3Crect x='12' y='44' width='76' height='12' rx='6' fill='white'/%3E%3Crect x='8' y='34' width='14' height='32' rx='7' fill='white'/%3E%3Crect x='78' y='34' width='14' height='32' rx='7' fill='white'/%3E%3Crect x='2' y='40' width='12' height='20' rx='6' fill='white'/%3E%3Crect x='86' y='40' width='12' height='20' rx='6' fill='white'/%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAD30lEQVR4nO3dUVLbMABF0TjTVdGttKsrWynbSr/ChGA7tiXb0us5vy1JmLk8ZMOQ4XKi26+325nPz36G94/hlOc96onEyxGR7/oEImbKXnHv8qBCZqnaYVd9MCGzVa2wqzyIkKmlNOxr6QsQMzWV9lQUtJjZQ0lXm+ZdyBxl7RFk9UKLmSOt7W1V0GLmDGu6Wxy0mDnT0v4WBS1mWrCkw5dBi5mWvOqx+D40tGQ2aOtMi+a6nAxazLRsqs/RoMVMD8Y6dYYmyregrTM9ee7VQhPlS9DWmR49dmuhifIZtHWmZ/d+LTRRBE2U4XJx3CCHhSaKoIkiaKIImihXF4QksdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFF+7PbIf/5O/9vvn7s9LY05uIOh+t+HnvsEngk710kd1D1yrPkktvx/+nBiB3UWusYLstb9a6ADF4VEKQ+61rcLx4++NdJBWdC1IxR1nxrqwJGDKNuD3mtNrXRfGuvAQhNl+U8KLSdHe25uwS2910ELmVbcW5wJe/7IIWZaNNPldNBipmUTfY4HLWZ6MNKpuxxE+f7LSdaZ3jxcJFpoogiaKIImiqCJImiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJImiiCJoogiaKoIkiaKIImiiCJoqgiTL+Llhn/7EZ74jVj8ZasdBEGQ/aQtKDkU6nF1rUtGyiz/kjh6hp0UyXr9+S4v7BZx/+ocp7rEw9mMDZ24YTgrscRNke9F7na+f2vjTWgYUmSlnQtb86rXOfGuqgfKFrfTJi7lsjHThyEGX8l5O22nIrzzLnObGDugu99kWJOdOJHdRd6EdzX6VC/n8c3MF+QcMJXBQSRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0ES5Du8fw9kvAmqx0EQRNFEETRRBE+V6uVwuLgxJMLx/DBaaKIImymfQjh307N6vhSbKl6CtND167NZCE+Vb0Faanjz3aqGJMhq0laYHY51OLrSoadlUn7NHDlHTorkunaGJ8jJoK01LXvW4aKFFTQuWdLj4yCFqzrS0v1VnaFFzhjXdrb4oFDVHWttbUZy3X2+3ko+HKVuHs+i2nbVmDyVdFd+HFjU1lfZUNUZHELaqNYy7rKuwWar2d/hdjwvCZspeR9XDzr/i5ojrrX9aFwbmL/0ZSgAAAABJRU5ErkJggg==">
+  <link rel="apple-touch-icon" href="REPLACEMEiVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAD30lEQVR4nO3dUVLbMABF0TjTVdGttKsrWynbSr/ChGA7tiXb0us5vy1JmLk8ZMOQ4XKi26+325nPz36G94/hlOc96onEyxGR7/oEImbKXnHv8qBCZqnaYVd9MCGzVa2wqzyIkKmlNOxr6QsQMzWV9lQUtJjZQ0lXm+ZdyBxl7RFk9UKLmSOt7W1V0GLmDGu6Wxy0mDnT0v4WBS1mWrCkw5dBi5mWvOqx+D40tGQ2aOtMi+a6nAxazLRsqs/RoMVMD8Y6dYYmyregrTM9ee7VQhPlS9DWmR49dmuhifIZtHWmZ/d+LTRRBE2U4XJx3CCHhSaKoIkiaKIImihXF4QksdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFF+7PbIf/5O/9vvn7s9LY05uIOh+t+HnvsEngk710kd1D1yrPkktvx/+nBiB3UWusYLstb9a6ADF4VEKQ+61rcLx4++NdJBWdC1IxR1nxrqwJGDKNuD3mtNrXRfGuvAQhNl+U8KLSdHe25uwS2910ELmVbcW5wJe/7IIWZaNNPldNBipmUTfY4HLWZ6MNKpuxxE+f7LSdaZ3jxcJFpoogiaKIImiqCJImiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJImiiCJoogiaKoIkiaKIImiiCJoqgiTL+Llhn/7EZ74jVj8ZasdBEGQ/aQtKDkU6nF1rUtGyiz/kjh6hp0UyXr9+S4v7BZx/+ocp7rEw9mMDZ24YTgrscRNke9F7na+f2vjTWgYUmSlnQtb86rXOfGuqgfKFrfTJi7lsjHThyEGX8l5O22nIrzzLnObGDugu99kWJOdOJHdRd6EdzX6VC/n8c3MF+QcMJXBQSRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNFEETRdBEETRRBE0UQRNF0ES5Du8fw9kvAmqx0EQRNFEETRRBE+V6uVwuLgxJMLx/DBaaKIImymfQjh307N6vhSbKl6CtND167NZCE+Vb0Faanjz3aqGJMhq0laYHY51OLrSoadlUn7NHDlHTorkunaGJ8jJoK01LXvW4aKFFTQuWdLj4yCFqzrS0v1VnaFFzhjXdrb4oFDVHWttbUZy3X2+3ko+HKVuHs+i2nbVmDyVdFd+HFjU1lfZUNUZHELaqNYy7rKuwWar2d/hdjwvCZspeR9XDzr/i5ojrrX9aFwbmL/0ZSgAAAABJRU5ErkJggg==">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -673,6 +679,14 @@ function toast(msg) {
   setSyncing(false);
   renderHome();
 })();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/meu-treino/sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
