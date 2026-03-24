@@ -64,6 +64,7 @@
     .tag-a { background: rgba(139,127,232,.18); color: #b0a8f0; }
     .tag-b { background: rgba(60,200,180,.18); color: #5dd9c8; }
     .tag-c { background: rgba(255,92,58,.18); color: #ff8a74; }
+    .tag-d { background: rgba(236,72,153,.18); color: #f472b6; }
     .dc-status { position: absolute; top: 10px; right: 10px; font-size: 13px; }
     .dc-duration { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
@@ -241,31 +242,31 @@ const DAYS = [
     { name:'Tríceps', exs:[{id:'seg_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'seg_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
     { name:'Cardio', exs:[{id:'seg_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
   ]},
-  { name:'Terça', short:'Ter', treino:'B', tag:'tag-b', title:'Costas + Bíceps', sections:[
-    { name:'Costas', exs:[{id:'ter_s1',name:'Puxada na polia (pulley)',sets:'3×15'},{id:'ter_s2',name:'Remada sentada na polia',sets:'3×15'},{id:'ter_s3',name:'Remada unilateral c/ haltere',sets:'3×12'}]},
-    { name:'Bíceps', exs:[{id:'ter_s4',name:'Rosca com halteres alternada',sets:'3×15'},{id:'ter_s5',name:'Rosca na polia (cabo baixo)',sets:'3×15'}]},
+  { name:'Terça', short:'Ter', treino:'B', tag:'tag-b', title:'Quadríceps + Panturrilha', sections:[
+    { name:'Quadríceps', exs:[{id:'ter_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'ter_s2',name:'Cadeira extensora',sets:'3×15'},{id:'ter_s3',name:'Leg press',sets:'3×15'}]},
+    { name:'Panturrilha', exs:[{id:'ter_s4',name:'Elevação de panturrilha em pé',sets:'3×20'},{id:'ter_s5',name:'Elevação de panturrilha sentada',sets:'3×20'}]},
     { name:'Cardio', exs:[{id:'ter_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
   ]},
-  { name:'Quarta', short:'Qua', treino:'C', tag:'tag-c', title:'Pernas + Abdômen', sections:[
-    { name:'Pernas', exs:[{id:'qua_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'qua_s2',name:'Cadeira extensora',sets:'3×15'},{id:'qua_s3',name:'Cadeira flexora',sets:'3×15'},{id:'qua_s4',name:'Elevação de panturrilha em pé',sets:'3×20'}]},
-    { name:'Abdômen', exs:[{id:'qua_s5',name:'Crunch no chão',sets:'3×20'},{id:'qua_s6',name:'Pinguim (oblíquos)',sets:'3×20'},{id:'qua_s7',name:'Elevação de pernas (toca o pé)',sets:'3×15'}]},
-    { name:'Cardio', exs:[{id:'qua_s8',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  { name:'Quarta', short:'Qua', treino:'C', tag:'tag-c', title:'Costas + Bíceps', sections:[
+    { name:'Costas', exs:[{id:'qua_s1',name:'Puxada na polia (pulley)',sets:'3×15'},{id:'qua_s2',name:'Remada sentada na polia',sets:'3×15'},{id:'qua_s3',name:'Remada unilateral c/ haltere',sets:'3×12'}]},
+    { name:'Bíceps', exs:[{id:'qua_s4',name:'Rosca com halteres alternada',sets:'3×15'},{id:'qua_s5',name:'Rosca na polia (cabo baixo)',sets:'3×15'}]},
+    { name:'Cardio', exs:[{id:'qua_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
   ]},
-  { name:'Quinta', short:'Qui', treino:'A', tag:'tag-a', title:'Peito + Ombro + Tríceps', sections:[
-    { name:'Peito', exs:[{id:'qui_s1',name:'Supino com halteres',sets:'3×15'},{id:'qui_s2',name:'Voador (peck deck)',sets:'3×15'}]},
-    { name:'Ombro', exs:[{id:'qui_s3',name:'Desenvolvimento c/ halteres',sets:'3×12'},{id:'qui_s4',name:'Elevação lateral c/ halteres',sets:'3×15'}]},
-    { name:'Tríceps', exs:[{id:'qui_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'qui_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
-    { name:'Cardio', exs:[{id:'qui_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  { name:'Quinta', short:'Qui', treino:'D', tag:'tag-d', title:'Glúteos + Posterior', sections:[
+    { name:'Glúteos', exs:[{id:'qui_s1',name:'Hip thrust (elevação pélvica)',sets:'3×15'},{id:'qui_s2',name:'Abdução de quadril (máquina)',sets:'3×20'},{id:'qui_s3',name:'Agachamento sumô',sets:'3×15'}]},
+    { name:'Posterior', exs:[{id:'qui_s4',name:'Stiff com halteres',sets:'3×12'},{id:'qui_s5',name:'Cadeira flexora',sets:'3×15'}]},
+    { name:'Cardio', exs:[{id:'qui_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
   ]},
-  { name:'Sexta', short:'Sex', treino:'B', tag:'tag-b', title:'Costas + Bíceps', sections:[
-    { name:'Costas', exs:[{id:'sex_s1',name:'Puxada na polia (pulley)',sets:'3×15'},{id:'sex_s2',name:'Remada sentada na polia',sets:'3×15'},{id:'sex_s3',name:'Remada unilateral c/ haltere',sets:'3×12'}]},
-    { name:'Bíceps', exs:[{id:'sex_s4',name:'Rosca com halteres alternada',sets:'3×15'},{id:'sex_s5',name:'Rosca na polia (cabo baixo)',sets:'3×15'}]},
-    { name:'Cardio', exs:[{id:'sex_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  { name:'Sexta', short:'Sex', treino:'A', tag:'tag-a', title:'Peito + Ombro + Tríceps', sections:[
+    { name:'Peito', exs:[{id:'sex_s1',name:'Supino com halteres',sets:'3×15'},{id:'sex_s2',name:'Voador (peck deck)',sets:'3×15'}]},
+    { name:'Ombro', exs:[{id:'sex_s3',name:'Desenvolvimento c/ halteres',sets:'3×12'},{id:'sex_s4',name:'Elevação lateral c/ halteres',sets:'3×15'}]},
+    { name:'Tríceps', exs:[{id:'sex_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'sex_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
+    { name:'Cardio', exs:[{id:'sex_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
   ]},
-  { name:'Sábado', short:'Sáb', treino:'C', tag:'tag-c', title:'Pernas + Abdômen', sections:[
-    { name:'Pernas', exs:[{id:'sab_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'sab_s2',name:'Cadeira extensora',sets:'3×15'},{id:'sab_s3',name:'Cadeira flexora',sets:'3×15'},{id:'sab_s4',name:'Elevação de panturrilha em pé',sets:'3×20'}]},
-    { name:'Abdômen', exs:[{id:'sab_s5',name:'Crunch no chão',sets:'3×20'},{id:'sab_s6',name:'Pinguim (oblíquos)',sets:'3×20'},{id:'sab_s7',name:'Elevação de pernas (toca o pé)',sets:'3×15'}]},
-    { name:'Cardio', exs:[{id:'sab_s8',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  { name:'Sábado', short:'Sáb', treino:'B', tag:'tag-b', title:'Quadríceps + Panturrilha', sections:[
+    { name:'Quadríceps', exs:[{id:'sab_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'sab_s2',name:'Cadeira extensora',sets:'3×15'},{id:'sab_s3',name:'Leg press',sets:'3×15'}]},
+    { name:'Panturrilha', exs:[{id:'sab_s4',name:'Elevação de panturrilha em pé',sets:'3×20'},{id:'sab_s5',name:'Elevação de panturrilha sentada',sets:'3×20'}]},
+    { name:'Cardio', exs:[{id:'sab_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
   ]},
 ];
 DAYS.forEach(d => { d.total = d.sections.reduce((s,sec) => s + sec.exs.length, 0); });
