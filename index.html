@@ -381,6 +381,17 @@
     .mbtn-c{background:var(--s2);color:var(--muted);border:1.5px solid var(--border)!important;}
     .mbtn-ok{background:var(--pink);color:#fff;}
 
+
+    /* add friend button */
+    .add-fr-btn{
+      display:flex;align-items:center;justify-content:center;gap:7px;
+      background:none;border:1.5px dashed var(--border);
+      border-radius:12px;padding:10px 16px;
+      color:var(--muted);font-family:'DM Sans',sans-serif;
+      font-size:13px;font-weight:700;cursor:pointer;
+      transition:border-color .2s,color .2s;width:100%;margin-top:6px;
+    }
+    .add-fr-btn:hover{border-color:var(--purple);color:var(--purple);}
     /* loading */
     .loading{text-align:center;padding:40px;font-size:13px;font-weight:600;color:var(--muted);}
 
@@ -460,6 +471,7 @@
         </div>
         <div class="sc-bar"><div class="sc-fill" id="bar-fr" style="width:0%"></div></div>
         <div class="sc-sub" id="sc-fr-sub">0 de 0</div>
+        <button class="add-fr-btn" id="add-fr-btn" onclick="addFriend()" style="display:none;">+ Adicionar amiga</button>
       </div>
     </div>
 
@@ -667,10 +679,15 @@ async function registerUser() {
 // Real-time listener on the index — detects when friend joins
 function listenIndex() {
   onSnapshot(indexRef(), snap => {
-    if (!snap.exists()) return;
-    const idx  = snap.data();
+    const idx  = snap.exists() ? snap.data() : {};
     const keys = Object.keys(idx).filter(k => k !== meKey);
-    if (!keys.length) return;
+    const addBtn = document.getElementById('add-fr-btn');
+    if (!keys.length) {
+      // No friend yet — show add button
+      if (addBtn) addBtn.style.display = 'flex';
+      return;
+    }
+    if (addBtn) addBtn.style.display = 'none';
     const newFrKey     = keys[0];
     const newFrDisplay = idx[keys[0]];
     if (newFrKey !== frKey || newFrDisplay !== frDisplay) {
@@ -686,6 +703,20 @@ function listenIndex() {
     }
   }, ()=>{});
 }
+
+// Add friend manually (pre-register her name)
+window.addFriend = async () => {
+  const n = prompt('Nome da sua amiga:');
+  if (!n || !n.trim()) return;
+  const frName = n.trim();
+  try {
+    const snap = await getDoc(indexRef());
+    const idx  = snap.exists() ? snap.data() : {};
+    idx[norm(frName)] = frName;
+    await setDoc(indexRef(), idx);
+    showToast('✅ ' + frName + ' adicionada!');
+  } catch(e) { showToast('Erro ao adicionar'); }
+};
 
 // ── FIRESTORE LISTENERS ────────────────────────
 function listenMyWeek() {
@@ -952,18 +983,27 @@ function saveKnownName(name) {
   if (!names.includes(name)) { names.push(name); localStorage.setItem('mf_known_names', JSON.stringify(names)); }
 }
 
-function renderSetup() {
-  const names = loadSavedNames();
+async function renderSetup() {
+  // Merge local saved names + names pre-registered in Firebase index
+  const localNames = loadSavedNames();
+  let allNames = [...localNames];
+  try {
+    const snap = await getDoc(doc(db,'metafit_users','__index__'));
+    if (snap.exists()) {
+      Object.values(snap.data()).forEach(n => { if (!allNames.includes(n)) allNames.push(n); });
+    }
+  } catch(e) {}
+
   const section = document.getElementById('saved-section');
   const list    = document.getElementById('saved-list');
-  if (names.length > 0) {
+  if (allNames.length > 0) {
     section.style.display = 'flex';
     list.innerHTML = '';
-    names.forEach(n => {
+    allNames.forEach(n => {
       const btn = document.createElement('button');
       btn.className = 's-name-btn';
       btn.innerHTML = `<div class="s-name-left"><div class="s-name-dot"></div><span class="s-name-text">${n}</span></div><span class="s-name-arrow">→</span>`;
-      btn.onclick = () => { meDisplay = n; meKey = norm(n); localStorage.setItem('mf_name', n); document.getElementById('setup').classList.add('off'); boot(); };
+      btn.onclick = () => { meDisplay = n; meKey = norm(n); localStorage.setItem('mf_name', n); saveKnownName(n); document.getElementById('setup').classList.add('off'); boot(); };
       list.appendChild(btn);
     });
     document.getElementById('name-label').textContent = 'Ou entre com outro nome';
