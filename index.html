@@ -1,1051 +1,630 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MetaFit</title>
-  <meta name="theme-color" content="#080810"/>
-  <!-- PWA iOS -->
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="MetaFit"/>
-  <link rel="apple-touch-icon" href="icon.png"/>
-  <link rel="icon" type="image/x-icon" href="favicon.ico"/>
-  <link rel="icon" type="image/png" href="icon.png"/>
-  
-  <script>
-    // Limpa service workers antigos que travam o cache
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(reg => reg.unregister());
-      });
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Meu Treino</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FF5C3A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meu Treino">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF5C3A'/%3E%3Crect x='12' y='44' width='76' height='12' rx='6' fill='white'/%3E%3Crect x='8' y='34' width='14' height='32' rx='7' fill='white'/%3E%3Crect x='78' y='34' width='14' height='32' rx='7' fill='white'/%3E%3Crect x='2' y='40' width='12' height='20' rx='6' fill='white'/%3E%3Crect x='86' y='40' width='12' height='20' rx='6' fill='white'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --bg:       #080810;
-      --s1:       #111120;
-      --s2:       #181828;
-      --s3:       #20202e;
-      --border:   #2c2c40;
-      --green:    #2eea8c;
-      --purple:   #9b7dff;
-      --pink:     #ff4d7d;
-      --yellow:   #ffd166;
-      --blue:     #4dc9ff;
-      --text:     #eeeef5;
-      --muted:    #5a5a78;
-      --muted2:   #3a3a55;
+      --bg: #0d0e10; --surface: #18191d; --surface2: #22242a;
+      --accent: #FF5C3A; --accent-soft: rgba(255,92,58,0.12);
+      --text: #f0f0f2; --muted: #6e7079; --border: rgba(255,255,255,0.07);
+      --success: #3ecf6e; --success-soft: rgba(62,207,110,0.12);
     }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{
-      font-family:'DM Sans',sans-serif;
-      background:var(--bg);color:var(--text);
-      min-height:100dvh;overflow-x:hidden;
-    }
-    /* grain */
-    body::after{
-      content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
-      background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
-    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; line-height: 1.5; overflow-x: hidden; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100vh; }
+    .screen { display: none; min-height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
 
-    /* ═══ SETUP ═══ */
-    #setup{
-      position:fixed;inset:0;z-index:500;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      background:var(--bg);padding:28px;gap:18px;
-    }
-    #setup.off{display:none;}
-    .s-logo{
-      font-family:'Bebas Neue',sans-serif;font-size:76px;letter-spacing:5px;line-height:1;
-      background:linear-gradient(140deg,var(--green) 0%,var(--purple) 100%);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-    }
-    .s-sub{color:var(--muted);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;}
-    .s-card{
-      background:var(--s2);border:1.5px solid var(--border);
-      border-radius:20px;padding:22px;width:100%;max-width:340px;
-      display:flex;flex-direction:column;gap:10px;
-    }
-    .s-card label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
-    .s-input{
-      background:var(--bg);border:2px solid var(--border);border-radius:12px;
-      padding:13px 16px;color:var(--text);font-family:'DM Sans',sans-serif;
-      font-size:15px;font-weight:700;width:100%;outline:none;
-      transition:border-color .2s;
-    }
-    .s-input:focus{border-color:var(--green);}
-    .s-btn{
-      background:linear-gradient(135deg,var(--green),#1ec870);
-      color:#060610;border:none;border-radius:14px;
-      padding:14px;font-family:'DM Sans',sans-serif;
-      font-size:15px;font-weight:800;cursor:pointer;
-      width:100%;max-width:340px;
-      transition:transform .15s,box-shadow .2s;
-    }
-    .s-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,234,140,.25);}
+    /* GLOBAL TIMER BAR */
+    .gtbar { display: none; position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; z-index: 100; background: var(--accent); padding: 10px 20px; align-items: center; justify-content: space-between; }
+    .gtbar.on { display: flex; }
+    .gtbar-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .gtbar-time { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: white; letter-spacing: 0.05em; }
+    .gtbar-day { font-size: 11px; color: rgba(255,255,255,0.8); }
 
-    /* saved names */
-    .s-saved-title{
-      font-size:11px;font-weight:800;color:var(--muted);
-      text-transform:uppercase;letter-spacing:1.5px;
-      align-self:flex-start;max-width:340px;width:100%;
-    }
-    .s-names{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
-    .s-name-btn{
-      background:var(--s2);border:1.5px solid var(--border);
-      border-radius:14px;padding:14px 18px;
-      display:flex;align-items:center;justify-content:space-between;
-      cursor:pointer;transition:border-color .2s,transform .1s;
-      font-family:'DM Sans',sans-serif;width:100%;
-    }
-    .s-name-btn:hover{border-color:var(--green);transform:translateX(4px);}
-    .s-name-left{display:flex;align-items:center;gap:10px;}
-    .s-name-dot{width:9px;height:9px;border-radius:50%;background:var(--green);}
-    .s-name-text{font-size:16px;font-weight:800;color:var(--text);}
-    .s-name-arrow{font-size:18px;color:var(--green);}
-    .s-divider{
-      display:flex;align-items:center;gap:10px;width:100%;max-width:340px;
-      color:var(--muted);font-size:12px;font-weight:700;
-    }
-    .s-divider::before,.s-divider::after{
-      content:'';flex:1;height:1px;background:var(--border);
-    }
+    /* HOME */
+    .home-header { padding: 64px 20px 20px; }
+    .home-header .greeting { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+    .home-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 46px; letter-spacing: 0.02em; line-height: 1; }
+    .home-header h1 span { color: var(--accent); }
+    .status-bar { display: flex; align-items: center; gap: 6px; padding: 0 20px 18px; font-size: 12px; color: var(--muted); }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+    .sync-dot.syncing { background: var(--accent); animation: pd 1s infinite; }
+    @keyframes pd { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .today-banner { margin: 0 20px 24px; background: var(--accent-soft); border: 1px solid rgba(255,92,58,.4); border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .today-banner.rest { background: rgba(255,255,255,.03); border-color: var(--border); cursor: default; }
+    .tb-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-bottom: 4px; }
+    .today-banner.rest .tb-label { color: var(--muted); }
+    .tb-name { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .02em; line-height: 1.1; margin-bottom: 2px; }
+    .tb-sub { font-size: 13px; color: var(--muted); }
+    .tb-arrow { width: 44px; height: 44px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { padding: 0 20px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .week-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 0 20px 40px; }
+    .day-card { background: var(--surface); border-radius: 14px; padding: 14px 12px; cursor: pointer; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .day-card.today { border-color: rgba(255,92,58,.5); background: var(--accent-soft); }
+    .day-card.done::before { content:''; position: absolute; top:0; left:0; right:0; height:2px; background: var(--success); }
+    .day-card.active-timer { border-color: rgba(255,92,58,.8); }
+    .dc-short { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 5px; }
+    .day-card.today .dc-short { color: var(--accent); }
+    .dc-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .02em; line-height: 1.1; margin-bottom: 6px; }
+    .dc-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+    .tag-a { background: rgba(139,127,232,.18); color: #b0a8f0; }
+    .tag-b { background: rgba(60,200,180,.18); color: #5dd9c8; }
+    .tag-c { background: rgba(255,92,58,.18); color: #ff8a74; }
+    .tag-d { background: rgba(236,72,153,.18); color: #f472b6; }
+    .dc-status { position: absolute; top: 10px; right: 10px; font-size: 13px; }
+    .dc-duration { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-    /* ═══ LAYOUT ═══ */
-    #app{position:relative;z-index:1;}
+    /* WORKOUT */
+    .workout-nav { display: flex; align-items: center; gap: 14px; padding: 52px 20px 16px; }
+    .back-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .wn-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 2px; }
+    .wn-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .02em; line-height: 1.1; }
+    .timer-section { padding: 8px 20px 22px; text-align: center; }
+    .timer-display { font-family: 'Bebas Neue', sans-serif; font-size: 96px; letter-spacing: .04em; line-height: 1; color: var(--text); margin-bottom: 18px; user-select: none; transition: color .3s; }
+    .timer-display.running { color: var(--accent); }
+    .timer-display.finished { color: var(--success); }
+    .timer-controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .timer-btn { height: 46px; border-radius: 100px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; }
+    .timer-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .timer-btn.primary { background: var(--accent); color: white; padding: 0 32px; min-width: 140px; }
+    .timer-btn.secondary { background: var(--surface2); color: var(--muted); padding: 0 22px; border: 1px solid var(--border); }
+    .progress-section { padding: 0 20px 18px; }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .pm-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .pm-count { font-size: 13px; font-weight: 600; }
+    .progress-track { height: 4px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 100px; transition: width .35s, background .3s; }
+    .progress-fill.full { background: var(--success); }
+    .exercise-list { flex: 1; overflow-y: auto; padding: 0 20px 130px; }
+    .ex-section { margin-bottom: 22px; }
+    .ex-sec-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .ex-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .ex-item:last-child { border-bottom: none; }
+    .ex-item.checked { opacity: .45; }
+    .ex-check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface2); background: var(--surface2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; cursor: pointer; }
+    .ex-item.checked .ex-check { background: var(--success); border-color: var(--success); }
+    .check-icon { width: 14px; height: 14px; opacity: 0; transition: opacity .2s; }
+    .ex-item.checked .check-icon { opacity: 1; }
+    .ex-info { flex: 1; min-width: 0; }
+    .ex-name { font-size: 15px; font-weight: 500; line-height: 1.3; }
+    .ex-item.checked .ex-name { text-decoration: line-through; }
+    .ex-sets { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .weight-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .weight-input { width: 56px; height: 34px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; text-align: center; padding: 0 4px; outline: none; }
+    .weight-input:focus { border-color: var(--accent); }
+    .weight-input::placeholder { color: var(--muted); font-size: 11px; }
+    .weight-unit { font-size: 11px; color: var(--muted); }
+    .workout-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 16px 20px 36px; background: linear-gradient(to top, var(--bg) 65%, transparent); pointer-events: none; }
+    .finish-btn { width: 100%; height: 56px; border-radius: 16px; border: none; background: var(--accent); color: white; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; pointer-events: all; }
+    .finish-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+    .finish-btn.done { background: var(--success); cursor: default; }
 
-    /* header */
-    .hdr{
-      padding:20px 18px 0;
-      display:flex;align-items:center;justify-content:space-between;
-    }
-    .logo{
-      font-family:'Bebas Neue',sans-serif;font-size:46px;letter-spacing:4px;line-height:1;
-      background:linear-gradient(135deg,var(--green),var(--purple));
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-    }
-    .me-pill{
-      display:flex;align-items:center;gap:7px;
-      background:var(--s2);border:1.5px solid var(--border);
-      border-radius:22px;padding:7px 13px;cursor:pointer;
-    }
-    .me-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
-    .me-name{font-size:13px;font-weight:700;color:var(--green);}
-    .me-hint{font-size:10px;color:var(--muted);}
+    /* SUMMARY */
+    .summary-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; }
+    .summary-icon { width: 84px; height: 84px; border-radius: 50%; background: var(--success-soft); border: 2px solid var(--success); display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+    .summary-title { font-family: 'Bebas Neue', sans-serif; font-size: 46px; line-height: 1; margin-bottom: 8px; }
+    .summary-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+    .summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 300px; margin-bottom: 44px; }
+    .stat-card { background: var(--surface); border-radius: 14px; padding: 18px 16px; border: 1px solid var(--border); }
+    .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .home-btn { width: 100%; max-width: 300px; height: 54px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; }
 
-    /* tabs */
-    .tabs{
-      display:flex;gap:6px;margin:18px 18px 0;
-      background:var(--s1);border:1.5px solid var(--border);
-      border-radius:14px;padding:4px;
-    }
-    .tab{
-      flex:1;border:none;border-radius:10px;padding:10px;
-      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
-      cursor:pointer;background:transparent;color:var(--muted);
-      transition:background .2s,color .2s;letter-spacing:.3px;
-    }
-    .tab.on{background:var(--s3);color:var(--text);}
-
-    /* panels */
-    .panel{display:none;padding:16px 18px 80px;}
-    .panel.on{display:block;}
-
-    /* week strip */
-    .wk-strip{
-      text-align:center;font-size:11px;font-weight:700;
-      color:var(--muted);text-transform:uppercase;letter-spacing:2px;
-      margin-bottom:14px;
-    }
-
-    /* scores */
-    .scores{display:flex;gap:10px;margin-bottom:16px;}
-    .sc{
-      flex:1;background:var(--s1);border:1.5px solid var(--border);
-      border-radius:16px;padding:14px 12px;
-    }
-    .sc.me-sc{border-color:rgba(46,234,140,.3);}
-    .sc.fr-sc{border-color:rgba(155,125,255,.3);}
-    .sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-    .sc-who{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;}
-    .me-sc .sc-who{color:var(--green);}
-    .fr-sc .sc-who{color:var(--purple);}
-    .sc-pct{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;}
-    .me-sc .sc-pct{color:var(--green);}
-    .fr-sc .sc-pct{color:var(--purple);}
-    .sc-bar{height:5px;background:var(--s3);border-radius:99px;overflow:hidden;margin-bottom:6px;}
-    .sc-fill{height:100%;border-radius:99px;transition:width .5s ease;}
-    .me-sc .sc-fill{background:var(--green);}
-    .fr-sc .sc-fill{background:var(--purple);}
-    .sc-sub{font-size:10px;font-weight:600;color:var(--muted);}
-
-    /* legend */
-    .legend{
-      display:flex;justify-content:center;gap:14px;
-      margin-bottom:14px;
-    }
-    .lg{font-size:11px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:4px;}
-
-    /* table */
-    .tbl-hdr{
-      display:grid;grid-template-columns:50px 1fr 1fr;
-      gap:8px;padding:0 2px 8px;
-    }
-    .th{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;}
-    .th:first-child{text-align:left;}
-    .th-inner{display:flex;flex-direction:column;gap:3px;}
-    .th-who{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;text-align:center;}
-    .th-cats{display:flex;gap:5px;}
-    .th-cats span{flex:1;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;}
-
-    .day-row{
-      display:grid;grid-template-columns:50px 1fr 1fr;
-      gap:8px;margin-bottom:8px;align-items:stretch;
-    }
-
-    /* day pill */
-    .dpill{
-      background:var(--s1);border:1.5px solid var(--border);
-      border-radius:12px;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;padding:8px 4px;gap:2px;
-    }
-    .day-row.today .dpill{border-color:var(--yellow);}
-    .dabbr{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;line-height:1;}
-    .day-row.today .dabbr{color:var(--yellow);}
-    .dtodot{width:5px;height:5px;border-radius:50%;background:var(--yellow);}
-
-    /* weekend pill */
-    .day-row.weekend .dpill{opacity:.4;}
-    .day-row.weekend .pair-cell{opacity:.35;pointer-events:none;}
-    .rest-label{
-      font-size:8px;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.5px;margin-top:2px;
-    }
-
-    /* pair */
-    .pair-cell{display:flex;gap:5px;}
-    .ck{
-      flex:1;border:none;border-radius:11px;
-      padding:10px 4px;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-      background:var(--s2);border:1.5px solid var(--border);
-      cursor:pointer;transition:transform .1s;
-    }
-    .ck:active{transform:scale(.93);}
-    .ck.done{background:rgba(46,234,140,.1);border-color:rgba(46,234,140,.4);}
-    .ck.fail{background:rgba(255,77,125,.1);border-color:rgba(255,77,125,.35);}
-    .ck.locked{cursor:default;}
-    .ck-icon{font-size:20px;line-height:1;}
-    .ck-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
-    .ck.done .ck-lbl{color:var(--green);}
-    .ck.fail .ck-lbl{color:var(--pink);}
-
-    /* ═══ MONTHLY PANEL ═══ */
-    .month-hdr{
-      display:flex;align-items:center;justify-content:space-between;
-      margin-bottom:16px;
-    }
-    .month-title{
-      font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;
-      color:var(--text);
-    }
-    .month-nav{display:flex;gap:6px;}
-    .mnav{
-      background:var(--s2);border:1.5px solid var(--border);
-      border-radius:10px;padding:6px 12px;color:var(--muted);
-      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
-      cursor:pointer;transition:border-color .2s,color .2s;
-    }
-    .mnav:hover{border-color:var(--purple);color:var(--purple);}
-
-    /* ONG banner */
-    .ong-banner{
-      background:linear-gradient(135deg,rgba(255,77,125,.12),rgba(155,125,255,.12));
-      border:1.5px solid rgba(255,77,125,.3);
-      border-radius:16px;padding:16px;margin-bottom:16px;
-    }
-    .ong-top{
-      display:flex;align-items:center;gap:8px;margin-bottom:10px;
-    }
-    .ong-icon{font-size:22px;}
-    .ong-title{font-size:13px;font-weight:800;color:var(--pink);}
-    .ong-rule{font-size:11px;color:var(--muted);font-weight:600;}
-    .ong-totals{display:flex;gap:10px;}
-    .ong-card{
-      flex:1;background:var(--s1);border:1.5px solid var(--border);
-      border-radius:12px;padding:12px 10px;text-align:center;
-    }
-    .ong-val{
-      font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;
-      color:var(--pink);margin-bottom:3px;
-    }
-    .ong-who{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-    .ong-x{font-size:11px;font-weight:600;color:var(--muted);margin-top:2px;}
-
-    /* week accordion */
-    .wk-block{
-      background:var(--s1);border:1.5px solid var(--border);
-      border-radius:14px;margin-bottom:10px;overflow:hidden;
-    }
-    .wk-block-hdr{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:13px 14px;cursor:pointer;
-      transition:background .15s;
-    }
-    .wk-block-hdr:hover{background:var(--s2);}
-    .wk-range{font-size:13px;font-weight:700;color:var(--text);}
-    .wk-chips{display:flex;gap:6px;align-items:center;}
-    .chip{
-      border-radius:8px;padding:3px 8px;
-      font-size:11px;font-weight:700;
-    }
-    .chip-g{background:rgba(46,234,140,.12);color:var(--green);}
-    .chip-r{background:rgba(255,77,125,.12);color:var(--pink);}
-    .wk-arrow{font-size:12px;color:var(--muted);transition:transform .2s;}
-    .wk-block.open .wk-arrow{transform:rotate(180deg);}
-
-    .wk-body{
-      display:none;padding:0 14px 14px;
-    }
-    .wk-block.open .wk-body{display:block;}
-
-    .wk-user-row{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:8px 0;border-top:1px solid var(--border);
-    }
-    .wku-name{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;}
-    .wku-stats{display:flex;gap:10px;align-items:center;}
-    .wku-stat{font-size:12px;font-weight:600;color:var(--muted);}
-    .wku-ong{
-      font-size:12px;font-weight:800;
-      background:rgba(255,77,125,.12);color:var(--pink);
-      border-radius:7px;padding:2px 8px;
-    }
-
-    /* monthly summary at bottom */
-    .summary-card{
-      background:var(--s2);border:1.5px solid var(--border);
-      border-radius:16px;padding:16px;margin-top:10px;
-    }
-    .summary-title{
-      font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;
-      color:var(--muted);margin-bottom:12px;
-    }
-    .summary-grid{display:flex;gap:8px;}
-    .sg{flex:1;text-align:center;}
-    .sg-val{
-      font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;
-      margin-bottom:3px;
-    }
-    .sg-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-
-    /* reset */
-    .rst-btn{
-      display:block;margin:20px auto 0;
-      background:none;border:1.5px solid var(--border);
-      border-radius:12px;padding:10px 24px;
-      color:var(--muted);font-family:'DM Sans',sans-serif;
-      font-size:12px;font-weight:700;cursor:pointer;
-      text-transform:uppercase;letter-spacing:1px;
-      transition:border-color .2s,color .2s;
-    }
-    .rst-btn:hover{border-color:var(--pink);color:var(--pink);}
-
-    /* ═══ TOAST ═══ */
-    .toast{
-      position:fixed;bottom:88px;left:50%;
-      transform:translateX(-50%) translateY(10px);
-      background:var(--s2);border:1.5px solid var(--green);
-      border-radius:12px;padding:9px 18px;
-      font-size:13px;font-weight:700;color:var(--green);
-      opacity:0;pointer-events:none;z-index:400;
-      transition:opacity .2s,transform .2s;white-space:nowrap;
-    }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-    /* modal */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;
-      display:flex;align-items:center;justify-content:center;padding:24px;}
-    .overlay.off{display:none;}
-    .modal{background:var(--s1);border:1.5px solid var(--border);
-      border-radius:20px;padding:28px 22px;max-width:300px;width:100%;text-align:center;}
-    .modal h3{font-family:'Bebas Neue',sans-serif;font-size:30px;
-      letter-spacing:2px;color:var(--pink);margin-bottom:8px;}
-    .modal p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.65;}
-    .modal-btns{display:flex;gap:8px;}
-    .modal-btns button{flex:1;border:none;border-radius:12px;padding:12px;
-      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;cursor:pointer;}
-    .mbtn-c{background:var(--s2);color:var(--muted);border:1.5px solid var(--border)!important;}
-    .mbtn-ok{background:var(--pink);color:#fff;}
-
-
-    /* add friend button */
-    .add-fr-btn{
-      display:flex;align-items:center;justify-content:center;gap:7px;
-      background:none;border:1.5px dashed var(--border);
-      border-radius:12px;padding:10px 16px;
-      color:var(--muted);font-family:'DM Sans',sans-serif;
-      font-size:13px;font-weight:700;cursor:pointer;
-      transition:border-color .2s,color .2s;width:100%;margin-top:6px;
-    }
-    .add-fr-btn:hover{border-color:var(--purple);color:var(--purple);}
-    /* loading */
-    .loading{text-align:center;padding:40px;font-size:13px;font-weight:600;color:var(--muted);}
-
-    @media(min-width:480px){
-      .panel{padding:16px 24px 80px;}
-      .hdr{padding:22px 24px 0;}
-      .tabs{margin:18px 24px 0;}
-    }
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(14px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 22px; border-radius: 100px; font-size: 13px; opacity: 0; transition: all .28s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    ::-webkit-scrollbar { width: 0; }
   </style>
 </head>
 <body>
+<div id="app">
 
-<!-- SETUP -->
-<div id="setup">
-  <div class="s-logo">MetaFit</div>
-  <p class="s-sub">Treino & Dieta — Semana a semana</p>
-  <div id="saved-section" style="display:none;width:100%;max-width:340px;display:none;flex-direction:column;gap:10px;">
-    <div class="s-saved-title">Entrar como</div>
-    <div id="saved-list" class="s-names"></div>
-    <div class="s-divider">novo usuário</div>
+  <div class="gtbar" id="gtbar">
+    <span class="gtbar-label">Treino em andamento</span>
+    <span class="gtbar-time" id="gtbar-time">00:00</span>
+    <span class="gtbar-day" id="gtbar-day"></span>
   </div>
-  <div class="s-card">
-    <label id="name-label">Qual é o seu nome?</label>
-    <input class="s-input" id="name-input" type="text" placeholder="Ex: Ana" maxlength="20"/>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="home-header">
+      <div class="greeting">Bora treinar,</div>
+      <h1>ANA <span>GABRIELLA</span></h1>
+    </div>
+    <div class="status-bar">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">Carregando...</span>
+    </div>
+    <div id="today-banner" class="today-banner">
+      <div>
+        <div class="tb-label" id="today-label">Treino de hoje</div>
+        <div class="tb-name" id="today-name">—</div>
+        <div class="tb-sub" id="today-sub">—</div>
+      </div>
+      <div class="tb-arrow" id="today-arrow">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+    <div class="section-title">Semana completa</div>
+    <div class="week-grid" id="week-grid"></div>
   </div>
-  <button class="s-btn" onclick="doSetup()">Entrar 💪</button>
+
+  <!-- WORKOUT -->
+  <div id="screen-workout" class="screen">
+    <div class="workout-nav">
+      <div class="back-btn" onclick="goHome()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </div>
+      <div>
+        <div class="wn-label" id="wn-label">Treino</div>
+        <div class="wn-title" id="wn-title">—</div>
+      </div>
+    </div>
+    <div class="timer-section">
+      <div class="timer-display" id="timer-display">00:00</div>
+      <div class="timer-controls">
+        <button class="timer-btn secondary" onclick="resetTimer()">Resetar</button>
+        <button class="timer-btn primary" id="timer-btn" onclick="toggleTimer()">Iniciar</button>
+      </div>
+    </div>
+    <div class="progress-section">
+      <div class="progress-meta">
+        <span class="pm-label">Progresso</span>
+        <span class="pm-count" id="progress-count">0 / 0</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="exercise-list" id="exercise-list"></div>
+    <div class="workout-footer">
+      <button class="finish-btn" id="finish-btn" onclick="finishWorkout()" disabled>Finalizar Treino</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="screen-summary" class="screen">
+    <div class="summary-wrap">
+      <div class="summary-icon">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="summary-title">TREINO FEITO!</div>
+      <div class="summary-sub" id="sum-sub">—</div>
+      <div class="summary-stats">
+        <div class="stat-card"><div class="stat-val" id="sum-duration">—</div><div class="stat-label">Duração</div></div>
+        <div class="stat-card"><div class="stat-val" id="sum-exercises">—</div><div class="stat-label">Exercícios</div></div>
+      </div>
+      <button class="home-btn" onclick="goHome()">Voltar ao início</button>
+    </div>
+  </div>
 </div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- MODAL -->
-<div class="overlay off" id="modal">
-  <div class="modal">
-    <h3>Resetar?</h3>
-    <p>Apaga <strong>todos os seus</strong> checks desta semana. A semana recomeça do zero.</p>
-    <div class="modal-btns">
-      <button class="mbtn-c" onclick="closeModal()">Cancelar</button>
-      <button class="mbtn-ok" onclick="confirmReset()">Resetar</button>
-    </div>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
-  <div class="hdr">
-    <div class="logo">MetaFit</div>
-    <div class="me-pill" onclick="changeName()">
-      <div class="me-dot"></div>
-      <span class="me-name" id="me-label">—</span>
-      <span class="me-hint">trocar</span>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab on" id="tab-week" onclick="showTab('week')">📅 Semana</button>
-    <button class="tab" id="tab-month" onclick="showTab('month')">📊 Resumo Mensal</button>
-  </div>
-
-  <!-- WEEK PANEL -->
-  <div class="panel on" id="panel-week">
-    <div class="wk-strip" id="wk-strip">—</div>
-
-    <div class="scores">
-      <div class="sc me-sc">
-        <div class="sc-top">
-          <span class="sc-who" id="sc-me-name">Você</span>
-          <span class="sc-pct" id="sc-me-pct">0%</span>
-        </div>
-        <div class="sc-bar"><div class="sc-fill" id="bar-me" style="width:0%"></div></div>
-        <div class="sc-sub" id="sc-me-sub">0 de 0</div>
-      </div>
-      <div class="sc fr-sc">
-        <div class="sc-top">
-          <span class="sc-who" id="sc-fr-name">Amiga</span>
-          <span class="sc-pct" id="sc-fr-pct">0%</span>
-        </div>
-        <div class="sc-bar"><div class="sc-fill" id="bar-fr" style="width:0%"></div></div>
-        <div class="sc-sub" id="sc-fr-sub">0 de 0</div>
-        <button class="add-fr-btn" id="add-fr-btn" onclick="addFriend()" style="display:none;">+ Adicionar amiga</button>
-      </div>
-    </div>
-
-    <div class="legend">
-      <div class="lg">✅ Feito</div>
-      <div class="lg">❌ Não feito</div>
-      <div class="lg">⬜ Pendente</div>
-    </div>
-
-    <div class="tbl-hdr">
-      <div></div>
-      <div class="th-inner">
-        <div class="th-who" id="col-me" style="color:var(--green)">Você</div>
-        <div class="th-cats"><span>Dieta</span><span>Treino</span></div>
-      </div>
-      <div class="th-inner">
-        <div class="th-who" id="col-fr" style="color:var(--purple)">Amiga</div>
-        <div class="th-cats"><span>Dieta</span><span>Treino</span></div>
-      </div>
-    </div>
-
-    <div id="days-table"><div class="loading">Carregando...</div></div>
-
-    <button class="rst-btn" onclick="openModal()">⟳ Resetar minha semana</button>
-  </div>
-
-  <!-- MONTH PANEL -->
-  <div class="panel" id="panel-month">
-    <div class="month-hdr">
-      <div class="month-title" id="month-title">—</div>
-      <div class="month-nav">
-        <button class="mnav" onclick="changeMonth(-1)">‹</button>
-        <button class="mnav" onclick="changeMonth(1)">›</button>
-      </div>
-    </div>
-
-    <div class="ong-banner">
-      <div class="ong-top">
-        <span class="ong-icon">🤝</span>
-        <div>
-          <div class="ong-title">Meta da ONG</div>
-          <div class="ong-rule">Cada ❌ = R$ 2,00 para a ONG</div>
-        </div>
-      </div>
-      <div class="ong-totals">
-        <div class="ong-card">
-          <div class="ong-val" id="ong-me-val">R$ 0</div>
-          <div class="ong-who" id="ong-me-who">Você</div>
-          <div class="ong-x" id="ong-me-x">0 ❌</div>
-        </div>
-        <div class="ong-card">
-          <div class="ong-val" id="ong-fr-val">R$ 0</div>
-          <div class="ong-who" id="ong-fr-who">Amiga</div>
-          <div class="ong-x" id="ong-fr-x">0 ❌</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="month-weeks"><div class="loading">Carregando...</div></div>
-
-    <div class="summary-card" id="month-summary" style="display:none;">
-      <div class="summary-title">Total do mês</div>
-      <div class="summary-grid">
-        <div class="sg">
-          <div class="sg-val" id="sum-me-done" style="color:var(--green)">0</div>
-          <div class="sg-lbl" id="sum-me-who">Seus ✅</div>
-        </div>
-        <div class="sg">
-          <div class="sg-val" id="sum-me-fail" style="color:var(--pink)">0</div>
-          <div class="sg-lbl">Seus ❌</div>
-        </div>
-        <div class="sg">
-          <div class="sg-val" id="sum-fr-done" style="color:var(--purple)">0</div>
-          <div class="sg-lbl" id="sum-fr-who">❌ dela</div>
-        </div>
-        <div class="sg">
-          <div class="sg-val" id="sum-fr-fail" style="color:var(--pink)">0</div>
-          <div class="sg-lbl" id="sum-fr-lbl">Dela ❌</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, onSnapshot, setDoc, getDoc, collection, query, where, getDocs }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// ════════════════════════════════════════════════
-//  🔥 COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI
-// ════════════════════════════════════════════════
+<script>
 const firebaseConfig = {
-  apiKey:            "AIzaSyB-rikqhsnKbrQ-XlWOdnCw-S8lch_kTLI",
-  authDomain:        "atelie-estudos.firebaseapp.com",
-  projectId:         "atelie-estudos",
-  storageBucket:     "atelie-estudos.firebasestorage.app",
+  apiKey: "AIzaSyB-rikqhsnKbrQ-XlWOdnCw-S8lch_kTLI",
+  authDomain: "atelie-estudos.firebaseapp.com",
+  projectId: "atelie-estudos",
+  storageBucket: "atelie-estudos.firebasestorage.app",
   messagingSenderId: "494720347993",
-  appId:             "1:494720347993:web:774a4858ccbe4ed3c92648"
+  appId: "1:494720347993:web:774a4858ccbe4ed3c92648"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const deviceId = 'ana_gabriella';
 
-// ── CONSTANTS ──────────────────────────────────
+// ── Week / date helpers ───────────────────────────────────────────────────────
+function getWeekStart() {
+  const d = new Date(), day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d); mon.setDate(d.getDate() + diff);
+  return mon.toISOString().split('T')[0];
+}
+function todayDayIdx() { const d = new Date().getDay(); return d === 0 ? -1 : d - 1; }
+
+// ── Data ──────────────────────────────────────────────────────────────────────
 const DAYS = [
-  { key:'seg', abbr:'SEG', jsDay:1 },
-  { key:'ter', abbr:'TER', jsDay:2 },
-  { key:'qua', abbr:'QUA', jsDay:3 },
-  { key:'qui', abbr:'QUI', jsDay:4 },
-  { key:'sex', abbr:'SEX', jsDay:5 },
-  { key:'sab', abbr:'SAB', jsDay:6, weekend:true },
-  { key:'dom', abbr:'DOM', jsDay:0, weekend:true },
+  { name:'Segunda', short:'Seg', treino:'A', tag:'tag-a', title:'Peito + Ombro + Tríceps', sections:[
+    { name:'Peito', exs:[{id:'seg_s1',name:'Supino com halteres',sets:'3×15'},{id:'seg_s2',name:'Voador (peck deck)',sets:'3×15'}]},
+    { name:'Ombro', exs:[{id:'seg_s3',name:'Desenvolvimento c/ halteres',sets:'3×12'},{id:'seg_s4',name:'Elevação lateral c/ halteres',sets:'3×15'}]},
+    { name:'Tríceps', exs:[{id:'seg_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'seg_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
+    { name:'Cardio', exs:[{id:'seg_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Terça', short:'Ter', treino:'B', tag:'tag-b', title:'Quadríceps + Panturrilha', sections:[
+    { name:'Quadríceps', exs:[{id:'ter_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'ter_s2',name:'Cadeira extensora',sets:'3×15'},{id:'ter_s3',name:'Leg press',sets:'3×15'}]},
+    { name:'Panturrilha', exs:[{id:'ter_s4',name:'Elevação de panturrilha em pé',sets:'3×20'},{id:'ter_s5',name:'Elevação de panturrilha sentada',sets:'3×20'}]},
+    { name:'Cardio', exs:[{id:'ter_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Quarta', short:'Qua', treino:'C', tag:'tag-c', title:'Costas + Bíceps', sections:[
+    { name:'Costas', exs:[{id:'qua_s1',name:'Puxada na polia (pulley)',sets:'3×15'},{id:'qua_s2',name:'Remada sentada na polia',sets:'3×15'},{id:'qua_s3',name:'Remada unilateral c/ haltere',sets:'3×12'}]},
+    { name:'Bíceps', exs:[{id:'qua_s4',name:'Rosca com halteres alternada',sets:'3×15'},{id:'qua_s5',name:'Rosca na polia (cabo baixo)',sets:'3×15'}]},
+    { name:'Cardio', exs:[{id:'qua_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Quinta', short:'Qui', treino:'D', tag:'tag-d', title:'Glúteos + Posterior', sections:[
+    { name:'Glúteos', exs:[{id:'qui_s1',name:'Hip thrust (elevação pélvica)',sets:'3×15'},{id:'qui_s2',name:'Abdução de quadril (máquina)',sets:'3×20'},{id:'qui_s3',name:'Agachamento sumô',sets:'3×15'}]},
+    { name:'Posterior', exs:[{id:'qui_s4',name:'Stiff com halteres',sets:'3×12'},{id:'qui_s5',name:'Cadeira flexora',sets:'3×15'}]},
+    { name:'Cardio', exs:[{id:'qui_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Sexta', short:'Sex', treino:'A', tag:'tag-a', title:'Peito + Ombro + Tríceps', sections:[
+    { name:'Peito', exs:[{id:'sex_s1',name:'Supino com halteres',sets:'3×15'},{id:'sex_s2',name:'Voador (peck deck)',sets:'3×15'}]},
+    { name:'Ombro', exs:[{id:'sex_s3',name:'Desenvolvimento c/ halteres',sets:'3×12'},{id:'sex_s4',name:'Elevação lateral c/ halteres',sets:'3×15'}]},
+    { name:'Tríceps', exs:[{id:'sex_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'sex_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
+    { name:'Cardio', exs:[{id:'sex_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Sábado', short:'Sáb', treino:'B', tag:'tag-b', title:'Quadríceps + Panturrilha', sections:[
+    { name:'Quadríceps', exs:[{id:'sab_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'sab_s2',name:'Cadeira extensora',sets:'3×15'},{id:'sab_s3',name:'Leg press',sets:'3×15'}]},
+    { name:'Panturrilha', exs:[{id:'sab_s4',name:'Elevação de panturrilha em pé',sets:'3×20'},{id:'sab_s5',name:'Elevação de panturrilha sentada',sets:'3×20'}]},
+    { name:'Cardio', exs:[{id:'sab_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
 ];
-const CATS      = ['dieta','treino'];
-const CYCLE     = ['pending','done','fail'];
-const ICONS     = { pending:'⬜', done:'✅', fail:'❌' };
-const WORKDAYS  = DAYS.filter(d => !d.weekend);
-const TOTAL_WK  = WORKDAYS.length * CATS.length; // 10 per week
+DAYS.forEach(d => { d.total = d.sections.reduce((s,sec) => s + sec.exs.length, 0); });
 
-// ── STATE ──────────────────────────────────────
-let meDisplay = '', meKey = '';
-let frDisplay = '', frKey = '';
-let weekKey   = '';
-let myData    = {}, frData = {};
-let unsubFr   = null;
-let viewMonth = null; // { year, month } for monthly panel
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentDay  = -1;
+let checked     = new Set();
+let weights     = {};
+let workoutDone = false;
+let cache       = {};
+let autoSaveT   = null;
+let weightSaveT = null;
 
-// ── HELPERS ────────────────────────────────────
-const norm = s => s.toLowerCase().replace(/\s+/g,'_');
-function getMonday(d = new Date()) {
-  const dt = new Date(d);
-  const day = dt.getDay();
-  dt.setDate(dt.getDate() + (day === 0 ? -6 : 1 - day));
-  dt.setHours(0,0,0,0);
-  return dt;
-}
-function calcWeekKey(d = new Date()) {
-  const mon = getMonday(d);
-  const jan1 = new Date(mon.getFullYear(),0,1);
-  const wn = Math.ceil(((mon - jan1)/86400000 + jan1.getDay()+1)/7);
-  return `${mon.getFullYear()}-W${String(wn).padStart(2,'0')}`;
-}
-function weekRange(wk) {
-  const [y,w] = wk.split('-W').map(Number);
-  const jan1 = new Date(y,0,1);
-  const mon = new Date(jan1.getTime()+((w-1)*7-(jan1.getDay()||7)+1)*86400000);
-  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-  const f = d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-  return { str:`${f(mon)} – ${f(sun)}`, mon, sun };
-}
-function todayKey() {
-  return ['dom','seg','ter','qua','qui','sex','sab'][new Date().getDay()];
-}
-const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
-// ── FIRESTORE REFS ─────────────────────────────
-const indexRef  = () => doc(db,'metafit_users','__index__');
-const myDocRef  = () => doc(db,'metafit_users',meKey,'weeks',weekKey);
-const frDocRef  = (fk,wk) => doc(db,'metafit_users',fk,'weeks',wk);
-
-// ── SETUP (overridden at bottom with saved-names logic) ──
-function refreshNameUI() {
-  document.getElementById('me-label').textContent      = meDisplay;
-  document.getElementById('sc-me-name').textContent    = meDisplay;
-  document.getElementById('col-me').textContent        = meDisplay;
-  document.getElementById('ong-me-who').textContent    = meDisplay;
-  document.getElementById('sum-me-who').textContent    = `${meDisplay} ✅`;
-}
-
-// ── BOOT ───────────────────────────────────────
-async function boot() {
-  weekKey = calcWeekKey();
-
-  // Auto reset on new week
-  const lw = localStorage.getItem('mf_lastweek');
-  if (lw && lw !== weekKey) { myData={}; await saveMyData(); }
-  localStorage.setItem('mf_lastweek', weekKey);
-
-  myData = JSON.parse(localStorage.getItem('mf_data')||'{}');
-  viewMonth = { year: new Date().getFullYear(), month: new Date().getMonth() };
-
-  refreshNameUI();
-  document.getElementById('wk-strip').textContent = `Semana de ${weekRange(weekKey).str}`;
-
-  await registerUser();
-  // Listen in real-time for friend joining — updates automatically
-  listenIndex();
-
-  listenMyWeek();
-  renderTable();
-  updateScores();
-}
-
-// ── REGISTER / FIND ────────────────────────────
-async function registerUser() {
-  try {
-    const snap = await getDoc(indexRef());
-    const idx  = snap.exists() ? snap.data() : {};
-    idx[meKey] = meDisplay;
-    await setDoc(indexRef(), idx);
-  } catch(e){}
-}
-// Real-time listener on the index — detects when friend joins
-function listenIndex() {
-  onSnapshot(indexRef(), snap => {
-    const idx  = snap.exists() ? snap.data() : {};
-    const keys = Object.keys(idx).filter(k => k !== meKey);
-    const addBtn = document.getElementById('add-fr-btn');
-    if (!keys.length) {
-      // No friend yet — show add button
-      if (addBtn) addBtn.style.display = 'flex';
-      return;
-    }
-    if (addBtn) addBtn.style.display = 'none';
-    const newFrKey     = keys[0];
-    const newFrDisplay = idx[keys[0]];
-    if (newFrKey !== frKey || newFrDisplay !== frDisplay) {
-      frKey     = newFrKey;
-      frDisplay = newFrDisplay;
-      document.getElementById('sc-fr-name').textContent = frDisplay;
-      document.getElementById('col-fr').textContent     = frDisplay;
-      document.getElementById('ong-fr-who').textContent = frDisplay;
-      document.getElementById('sum-fr-who').textContent = frDisplay + ' ✅';
-      document.getElementById('sum-fr-lbl').textContent = frDisplay + ' ❌';
-      listenFriend(frKey, weekKey);
-      renderTable();
-    }
-  }, ()=>{});
-}
-
-// Add friend manually (pre-register her name)
-window.addFriend = async () => {
-  const n = prompt('Nome da sua amiga:');
-  if (!n || !n.trim()) return;
-  const frName = n.trim();
-  try {
-    const snap = await getDoc(indexRef());
-    const idx  = snap.exists() ? snap.data() : {};
-    idx[norm(frName)] = frName;
-    await setDoc(indexRef(), idx);
-    showToast('✅ ' + frName + ' adicionada!');
-  } catch(e) { showToast('Erro ao adicionar'); }
-};
-
-// ── FIRESTORE LISTENERS ────────────────────────
-function listenMyWeek() {
-  onSnapshot(myDocRef(), snap => {
-    if (snap.exists()) { myData = snap.data().checks||{}; }
-    renderTable(); updateScores();
-  }, ()=>{});
-}
-function listenFriend(fk, wk) {
-  if (unsubFr) unsubFr();
-  unsubFr = onSnapshot(frDocRef(fk,wk), snap => {
-    frData = snap.exists() ? snap.data().checks||{} : {};
-    updateFriendCells();
-    updateScores();
-  }, ()=>{});
-}
-
-// ── SAVE ───────────────────────────────────────
-async function saveMyData() {
-  localStorage.setItem('mf_data', JSON.stringify(myData));
-  try {
-    await setDoc(myDocRef(), { checks:myData, display:meDisplay, week:weekKey, updated:Date.now() }, {merge:true});
-  } catch(e){}
-}
-
-// ── TAB SWITCH ─────────────────────────────────
-window.showTab = tab => {
-  ['week','month'].forEach(t => {
-    document.getElementById(`tab-${t}`).classList.toggle('on', t===tab);
-    document.getElementById(`panel-${t}`).classList.toggle('on', t===tab);
-  });
-  if (tab === 'month') renderMonth();
-};
-
-// ── WEEK TABLE ─────────────────────────────────
-function renderTable() {
-  const today = todayKey();
-  const wrap  = document.getElementById('days-table');
-  wrap.innerHTML = '';
-
-  DAYS.forEach(({ key, abbr, weekend }) => {
-    const row = document.createElement('div');
-    row.className = `day-row${key===today?' today':''}${weekend?' weekend':''}`;
-
-    // Day pill
-    const pill = document.createElement('div');
-    pill.className = 'dpill';
-    pill.innerHTML = `<span class="dabbr">${abbr}</span>
-      ${key===today ? '<div class="dtodot"></div>' : ''}
-      ${weekend ? '<span class="rest-label">Descanso</span>' : ''}`;
-    row.appendChild(pill);
-
-    // My pair
-    const myP = makePair(key, myData, false, weekend);
-    row.appendChild(myP);
-
-    // Friend pair (locked)
-    const frP = makePair(key, frData, true, weekend);
-    row.appendChild(frP);
-
-    wrap.appendChild(row);
-  });
-}
-
-function makePair(dayKey, data, locked, weekend) {
-  const pair = document.createElement('div');
-  pair.className = `pair-cell${locked?' friend':''}`;
-  CATS.forEach(cat => {
-    const ck    = `${dayKey}_${cat}`;
-    const state = weekend ? 'pending' : (data[ck]||'pending');
-    const btn   = document.createElement('button');
-    btn.className = `ck ${state}${locked?' locked':''}${weekend?' locked':''}`;
-    btn.id = `${locked?'fr':'me'}-${ck}`;
-    btn.innerHTML = `<span class="ck-icon">${ICONS[state]}</span>
-      <span class="ck-lbl">${cat==='dieta'?'Dieta':'Treino'}</span>`;
-    if (!locked && !weekend) btn.onclick = () => cycleMe(ck);
-    pair.appendChild(btn);
-  });
-  return pair;
-}
-
-function updateFriendCells() {
-  DAYS.filter(d=>!d.weekend).forEach(({ key }) => {
-    CATS.forEach(cat => {
-      const ck  = `${key}_${cat}`;
-      const btn = document.getElementById(`fr-${ck}`);
-      if (!btn) return;
-      const st  = frData[ck]||'pending';
-      btn.className = `ck ${st} locked`;
-      btn.querySelector('.ck-icon').textContent = ICONS[st];
-      btn.querySelector('.ck-lbl').className    = 'ck-lbl';
-    });
-  });
-}
-
-// ── CYCLE ──────────────────────────────────────
-async function cycleMe(ck) {
-  const cur  = myData[ck]||'pending';
-  const next = CYCLE[(CYCLE.indexOf(cur)+1)%CYCLE.length];
-  myData[ck] = next;
-  const btn  = document.getElementById(`me-${ck}`);
-  if (btn) {
-    btn.className = `ck ${next}`;
-    btn.querySelector('.ck-icon').textContent = ICONS[next];
-  }
-  updateScores();
-  await saveMyData();
-  showToast(next==='done'?'✅ Isso aí!':next==='fail'?'❌ Marcado — vale R$2 pra ONG':'⬜ Desmarcado');
-}
-
-// ── SCORES ─────────────────────────────────────
-function cntDone(d){ return WORKDAYS.flatMap(({key})=>CATS.map(c=>`${key}_${c}`)).filter(k=>d[k]==='done').length; }
-
-function updateScores() {
-  const md = cntDone(myData), fd = cntDone(frData);
-  const mp = TOTAL_WK ? Math.round(md/TOTAL_WK*100) : 0;
-  const fp = TOTAL_WK ? Math.round(fd/TOTAL_WK*100) : 0;
-  set('sc-me-pct', mp+'%'); set('sc-fr-pct', fp+'%');
-  document.getElementById('bar-me').style.width = mp+'%';
-  document.getElementById('bar-fr').style.width = fp+'%';
-  set('sc-me-sub', `${md} de ${TOTAL_WK}`);
-  set('sc-fr-sub', `${fd} de ${TOTAL_WK}`);
-}
-
-// ── MONTHLY ────────────────────────────────────
-window.changeMonth = dir => {
-  let { year, month } = viewMonth;
-  month += dir;
-  if (month < 0)  { month = 11; year--; }
-  if (month > 11) { month = 0;  year++; }
-  viewMonth = { year, month };
-  renderMonth();
-};
-
-async function renderMonth() {
-  const { year, month } = viewMonth;
-  document.getElementById('month-title').textContent = `${MONTHS_PT[month]} ${year}`;
-
-  const weeks = getWeeksOfMonth(year, month);
-  const wrap  = document.getElementById('month-weeks');
-  wrap.innerHTML = '<div class="loading">Carregando semanas...</div>';
-
-  // Fetch all week data for both users
-  const allMe = {}, allFr = {};
-  await Promise.all(weeks.map(async wk => {
+// ── GLOBAL TIMER ─────────────────────────────────────────────────────────────
+// Persists in localStorage so it survives app close/reopen
+// Keeps ticking across screen navigation
+const GT = {
+  running: false, elapsed: 0, startMs: null, dayIdx: -1, _iv: null,
+  load() {
     try {
-      const ms = await getDoc(doc(db,'metafit_users',meKey,'weeks',wk));
-      allMe[wk] = ms.exists() ? (ms.data().checks||{}) : {};
-    } catch(e){ allMe[wk]={}; }
-    if (frKey) {
-      try {
-        const fs = await getDoc(doc(db,'metafit_users',frKey,'weeks',wk));
-        allFr[wk] = fs.exists() ? (fs.data().checks||{}) : {};
-      } catch(e){ allFr[wk]={}; }
+      const s = JSON.parse(localStorage.getItem('gtimer') || 'null');
+      if (!s) return;
+      this.elapsed = s.elapsed || 0;
+      this.dayIdx  = s.dayIdx  !== undefined ? s.dayIdx : -1;
+      this.running = s.running || false;
+      this.startMs = s.startMs || null;
+      // Catch up time elapsed while app was closed
+      if (this.running && this.startMs) {
+        this.elapsed += Math.floor((Date.now() - this.startMs) / 1000);
+        this.startMs  = Date.now();
+      }
+    } catch(e) {}
+  },
+  save() {
+    localStorage.setItem('gtimer', JSON.stringify({
+      elapsed: this.elapsed, dayIdx: this.dayIdx,
+      running: this.running, startMs: this.startMs,
+    }));
+  },
+  seconds() {
+    if (this.running && this.startMs)
+      return this.elapsed + Math.floor((Date.now() - this.startMs) / 1000);
+    return this.elapsed;
+  },
+  start(dayIdx) {
+    if (this.running) return;
+    if (this.dayIdx !== dayIdx) {
+      // Different day — save old timer progress then reset
+      if (this.dayIdx >= 0) persistTimerForDay(this.dayIdx);
+      this.elapsed = 0; this.dayIdx = dayIdx;
     }
-  }));
-
-  wrap.innerHTML = '';
-  let totMeDone=0, totMeFail=0, totFrDone=0, totFrFail=0;
-
-  weeks.forEach(wk => {
-    const { str } = weekRange(wk);
-    const mChecks = allMe[wk]||{};
-    const fChecks = allFr[wk]||{};
-
-    const mDone = WORKDAYS.flatMap(({key})=>CATS.map(c=>`${key}_${c}`)).filter(k=>mChecks[k]==='done').length;
-    const mFail = WORKDAYS.flatMap(({key})=>CATS.map(c=>`${key}_${c}`)).filter(k=>mChecks[k]==='fail').length;
-    const fDone = WORKDAYS.flatMap(({key})=>CATS.map(c=>`${key}_${c}`)).filter(k=>fChecks[k]==='done').length;
-    const fFail = WORKDAYS.flatMap(({key})=>CATS.map(c=>`${key}_${c}`)).filter(k=>fChecks[k]==='fail').length;
-
-    totMeDone+=mDone; totMeFail+=mFail; totFrDone+=fDone; totFrFail+=fFail;
-
-    const block = document.createElement('div');
-    block.className = 'wk-block';
-    block.innerHTML = `
-      <div class="wk-block-hdr" onclick="this.parentElement.classList.toggle('open')">
-        <span class="wk-range">${str}</span>
-        <div class="wk-chips">
-          <span class="chip chip-g">✅ ${mDone}</span>
-          <span class="chip chip-r">❌ ${mFail}</span>
-        </div>
-        <span class="wk-arrow">▾</span>
-      </div>
-      <div class="wk-body">
-        <div class="wk-user-row">
-          <span class="wku-name" style="color:var(--green)">${meDisplay}</span>
-          <div class="wku-stats">
-            <span class="wku-stat">✅ ${mDone} &nbsp; ❌ ${mFail}</span>
-            ${mFail>0?`<span class="wku-ong">R$ ${(mFail*2).toFixed(0)}</span>`:''}
-          </div>
-        </div>
-        ${frKey ? `<div class="wk-user-row">
-          <span class="wku-name" style="color:var(--purple)">${frDisplay}</span>
-          <div class="wku-stats">
-            <span class="wku-stat">✅ ${fDone} &nbsp; ❌ ${fFail}</span>
-            ${fFail>0?`<span class="wku-ong">R$ ${(fFail*2).toFixed(0)}</span>`:''}
-          </div>
-        </div>` : ''}
-      </div>`;
-    wrap.appendChild(block);
-  });
-
-  // ONG totals
-  set('ong-me-val', `R$ ${totMeFail*2}`);
-  set('ong-me-x',   `${totMeFail} ❌`);
-  set('ong-fr-val', `R$ ${totFrFail*2}`);
-  set('ong-fr-x',   `${totFrFail} ❌`);
-
-  // Summary
-  set('sum-me-done', totMeDone);
-  set('sum-me-fail', totMeFail);
-  set('sum-fr-done', totFrDone);
-  set('sum-fr-fail', totFrFail);
-  document.getElementById('month-summary').style.display = 'block';
-}
-
-// Returns week keys whose Monday falls in the given month
-function getWeeksOfMonth(year, month) {
-  const result = [];
-  // iterate each week Monday from start of month to end
-  const firstDay = new Date(year, month, 1);
-  const lastDay  = new Date(year, month+1, 0);
-  // start from Monday on or before firstDay
-  let d = getMonday(firstDay);
-  while (d <= lastDay) {
-    const wk = calcWeekKey(d);
-    if (!result.includes(wk)) result.push(wk);
-    d = new Date(d); d.setDate(d.getDate()+7);
-  }
-  return result;
-}
-
-// ── RESET ──────────────────────────────────────
-window.openModal   = () => document.getElementById('modal').classList.remove('off');
-window.closeModal  = () => document.getElementById('modal').classList.add('off');
-window.confirmReset = async () => {
-  myData = {};
-  await saveMyData();
-  renderTable(); updateScores();
-  closeModal();
-  showToast('⟳ Semana resetada!');
+    this.running = true; this.startMs = Date.now();
+    this.save(); this._tick();
+  },
+  pause() {
+    if (!this.running) return;
+    this.elapsed = this.seconds(); this.startMs = null; this.running = false;
+    this.save(); updateGlobalBar();
+  },
+  reset() {
+    this.pause();
+    this.elapsed = 0; this.startMs = null; this.dayIdx = -1;
+    clearInterval(this._iv); this._iv = null;
+    this.save(); updateGlobalBar(); refreshTimerDisplay();
+  },
+  _tick() {
+    if (this._iv) return;
+    this._iv = setInterval(() => {
+      this.save();
+      updateGlobalBar();
+      refreshTimerDisplay();
+    }, 1000);
+  },
 };
 
-// ── TOAST ──────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._t);
-  t._t = setTimeout(()=>t.classList.remove('show'), 2300);
+function updateGlobalBar() {
+  const bar = document.getElementById('gtbar');
+  if (GT.dayIdx >= 0 && (GT.running || GT.elapsed > 0)) {
+    bar.classList.add('on');
+    document.getElementById('gtbar-time').textContent = fmtTime(GT.seconds());
+    document.getElementById('gtbar-day').textContent  = DAYS[GT.dayIdx]?.name || '';
+  } else {
+    bar.classList.remove('on');
+  }
 }
 
-// ── UTIL ───────────────────────────────────────
-function set(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
+function refreshTimerDisplay() {
+  const el = document.getElementById('timer-display');
+  if (!el || currentDay < 0) return;
+  el.textContent = fmtTime(GT.dayIdx === currentDay ? GT.seconds() : (cache[currentDay]?.durationSeconds || 0));
 }
 
-// ── ENTRY ──────────────────────────────────────
-function loadSavedNames() {
-  return JSON.parse(localStorage.getItem('mf_known_names') || '[]');
-}
-function saveKnownName(name) {
-  const names = loadSavedNames();
-  if (!names.includes(name)) { names.push(name); localStorage.setItem('mf_known_names', JSON.stringify(names)); }
+function persistTimerForDay(dayIdx) {
+  if (dayIdx < 0) return;
+  const secs = GT.seconds();
+  if (secs > 0) {
+    db.collection('treino_sessions').doc(sessionId(dayIdx))
+      .set({ durationSeconds: secs }, { merge: true }).catch(() => {});
+  }
 }
 
-async function renderSetup() {
-  // Merge local saved names + names pre-registered in Firebase index
-  const localNames = loadSavedNames();
-  let allNames = [...localNames];
+// ── Firestore ─────────────────────────────────────────────────────────────────
+function sessionId(dayIdx) { return `${deviceId}_${getWeekStart()}_d${dayIdx}`; }
+function weightsId()       { return `${deviceId}_weights`; }
+
+function setSyncing(on) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if (dot) dot.className = on ? 'sync-dot syncing' : 'sync-dot';
+  if (lbl) lbl.textContent = on ? 'Sincronizando...' : 'Sincronizado';
+}
+
+async function loadAll() {
+  setSyncing(true);
   try {
-    const snap = await getDoc(doc(db,'metafit_users','__index__'));
-    if (snap.exists()) {
-      Object.values(snap.data()).forEach(n => { if (!allNames.includes(n)) allNames.push(n); });
-    }
+    const [wSnap, ...snaps] = await Promise.all([
+      db.collection('treino_weights').doc(weightsId()).get(),
+      ...DAYS.map((_,i) => db.collection('treino_sessions').doc(sessionId(i)).get()),
+    ]);
+    if (wSnap.exists) weights = wSnap.data().weights || {};
+    snaps.forEach((snap, i) => { if (snap.exists) cache[i] = snap.data(); });
   } catch(e) {}
+  setSyncing(false);
+}
 
-  const section = document.getElementById('saved-section');
-  const list    = document.getElementById('saved-list');
-  if (allNames.length > 0) {
-    section.style.display = 'flex';
-    list.innerHTML = '';
-    allNames.forEach(n => {
-      const btn = document.createElement('button');
-      btn.className = 's-name-btn';
-      btn.innerHTML = `<div class="s-name-left"><div class="s-name-dot"></div><span class="s-name-text">${n}</span></div><span class="s-name-arrow">→</span>`;
-      btn.onclick = () => { meDisplay = n; meKey = norm(n); localStorage.setItem('mf_name', n); saveKnownName(n); document.getElementById('setup').classList.add('off'); boot(); };
-      list.appendChild(btn);
-    });
-    document.getElementById('name-label').textContent = 'Ou entre com outro nome';
+async function saveSession(dayIdx, data) {
+  setSyncing(true);
+  try { await db.collection('treino_sessions').doc(sessionId(dayIdx)).set(data, { merge: true }); }
+  catch(e) {}
+  setSyncing(false);
+}
+
+async function saveWeights() {
+  try { await db.collection('treino_weights').doc(weightsId()).set({ weights }, { merge: false }); }
+  catch(e) {}
+}
+
+// ── Checklist ─────────────────────────────────────────────────────────────────
+function toggleEx(id) {
+  if (workoutDone) return;
+  checked.has(id) ? checked.delete(id) : checked.add(id);
+  document.querySelector(`[data-id="${id}"]`)?.classList.toggle('checked', checked.has(id));
+  updateProgress();
+  scheduleSessionSave();
+}
+
+function updateProgress() {
+  const total = DAYS[currentDay].total, done = checked.size;
+  document.getElementById('progress-count').textContent = `${done} / ${total}`;
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = (total > 0 ? Math.round(done/total*100) : 0) + '%';
+  fill.classList.toggle('full', done === total);
+  const btn = document.getElementById('finish-btn');
+  if (!workoutDone) btn.disabled = done === 0;
+}
+
+function scheduleSessionSave() {
+  if (autoSaveT) clearTimeout(autoSaveT);
+  autoSaveT = setTimeout(() => {
+    const secs = GT.dayIdx === currentDay ? GT.seconds() : (cache[currentDay]?.durationSeconds || 0);
+    const data = {
+      deviceId, dayIndex: currentDay, dayName: DAYS[currentDay].name,
+      weekStart: getWeekStart(), checkedExercises: [...checked],
+      durationSeconds: secs, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    saveSession(currentDay, data);
+    cache[currentDay] = { ...(cache[currentDay] || {}), ...data };
+  }, 1200);
+}
+
+function onWeightChange(exId, val) {
+  weights[exId] = val;
+  if (weightSaveT) clearTimeout(weightSaveT);
+  weightSaveT = setTimeout(saveWeights, 1500);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  if (GT.dayIdx >= 0) persistTimerForDay(GT.dayIdx);
+  currentDay = -1; workoutDone = false;
+  renderHome(); show('screen-home');
+}
+
+async function openDay(idx) {
+  currentDay = idx; workoutDone = false; checked = new Set();
+  const day = DAYS[idx];
+
+  setSyncing(true);
+  const snap = await db.collection('treino_sessions').doc(sessionId(idx)).get();
+  if (snap.exists) {
+    cache[idx] = snap.data();
+    (snap.data().checkedExercises || []).forEach(id => checked.add(id));
+    if (snap.data().completed) workoutDone = true;
+  }
+  setSyncing(false);
+
+  document.getElementById('wn-label').textContent = `Treino ${day.treino} — ${day.name}`;
+  document.getElementById('wn-title').textContent  = day.title;
+
+  const timerSecs = GT.dayIdx === idx ? GT.seconds() : (cache[idx]?.durationSeconds || 0);
+  const tDisp = document.getElementById('timer-display');
+  const tBtn  = document.getElementById('timer-btn');
+  tDisp.textContent = fmtTime(timerSecs);
+  tDisp.className   = 'timer-display' + (workoutDone ? ' finished' : (GT.running && GT.dayIdx === idx ? ' running' : ''));
+  tBtn.textContent  = workoutDone ? 'Concluído' : (GT.running && GT.dayIdx === idx ? 'Pausar' : (timerSecs > 0 ? 'Continuar' : 'Iniciar'));
+  tBtn.disabled     = workoutDone;
+
+  document.getElementById('exercise-list').innerHTML = day.sections.map(sec => `
+    <div class="ex-section">
+      <div class="ex-sec-title">${sec.name}</div>
+      ${sec.exs.map(ex => `
+        <div class="ex-item ${checked.has(ex.id) ? 'checked' : ''}" data-id="${ex.id}">
+          <div class="ex-check" onclick="toggleEx('${ex.id}')">
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="ex-info">
+            <div class="ex-name">${ex.name}</div>
+            <div class="ex-sets">${ex.sets}</div>
+          </div>
+          <div class="weight-wrap">
+            <input class="weight-input" type="number" min="0" step="0.5" placeholder="kg"
+              value="${weights[ex.id] || ''}"
+              oninput="onWeightChange('${ex.id}', this.value)"
+              onclick="event.stopPropagation()" />
+            <span class="weight-unit">kg</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  updateProgress();
+  const finBtn = document.getElementById('finish-btn');
+  if (workoutDone) { finBtn.textContent = 'Treino já concluído!'; finBtn.disabled = true; finBtn.className = 'finish-btn done'; }
+  else { finBtn.textContent = 'Finalizar Treino'; finBtn.disabled = checked.size === 0; finBtn.className = 'finish-btn'; }
+
+  show('screen-workout');
+}
+
+// ── Timer controls ────────────────────────────────────────────────────────────
+function toggleTimer() {
+  if (workoutDone) return;
+  const tDisp = document.getElementById('timer-display');
+  const tBtn  = document.getElementById('timer-btn');
+  if (GT.running && GT.dayIdx === currentDay) {
+    GT.pause();
+    tBtn.textContent = 'Continuar';
+    tDisp.classList.remove('running');
+  } else {
+    GT.start(currentDay);
+    tBtn.textContent = 'Pausar';
+    tDisp.classList.add('running');
   }
 }
 
-// Save name on first setup
-const _origDoSetup = window.doSetup;
-window.doSetup = async () => {
-  const v = document.getElementById('name-input').value.trim();
-  if (!v) return;
-  saveKnownName(v);
-  meDisplay = v; meKey = norm(v);
-  localStorage.setItem('mf_name', meDisplay);
-  document.getElementById('setup').classList.add('off');
-  await boot();
-};
-
-// Also save on changeName
-const _origChangeName = window.changeName;
-window.changeName = () => {
-  const n = prompt('Alterar nome:', meDisplay);
-  if (n?.trim()) {
-    meDisplay = n.trim(); meKey = norm(meDisplay);
-    localStorage.setItem('mf_name', meDisplay);
-    saveKnownName(meDisplay);
-    refreshNameUI();
-  }
-};
-
-const saved = localStorage.getItem('mf_name');
-if (saved) {
-  meDisplay = saved; meKey = norm(saved);
-  saveKnownName(saved);
-  document.getElementById('setup').classList.add('off');
-  boot();
-} else {
-  renderSetup();
+function resetTimer() {
+  GT.reset();
+  const tDisp = document.getElementById('timer-display');
+  tDisp.textContent = '00:00';
+  tDisp.className = 'timer-display';
+  document.getElementById('timer-btn').textContent = 'Iniciar';
 }
-document.getElementById('name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.doSetup();
+
+// ── Finish ────────────────────────────────────────────────────────────────────
+async function finishWorkout() {
+  if (workoutDone) return;
+  GT.pause();
+  const secs = GT.dayIdx === currentDay ? GT.elapsed : 0;
+  const day  = DAYS[currentDay];
+  workoutDone = true;
+
+  const tDisp = document.getElementById('timer-display');
+  tDisp.classList.remove('running'); tDisp.classList.add('finished');
+  document.getElementById('timer-btn').textContent = 'Concluído';
+  document.getElementById('timer-btn').disabled = true;
+
+  // Clear global timer after finishing
+  GT.elapsed = 0; GT.dayIdx = -1; GT.startMs = null; GT.running = false;
+  clearInterval(GT._iv); GT._iv = null; GT.save(); updateGlobalBar();
+
+  setSyncing(true);
+  await saveSession(currentDay, {
+    deviceId, dayIndex: currentDay, dayName: day.name, title: day.title,
+    weekStart: getWeekStart(), checkedExercises: [...checked],
+    durationSeconds: secs, exercisesDone: checked.size, exercisesTotal: day.total,
+    completed: true, completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  setSyncing(false);
+  cache[currentDay] = { completed: true, durationSeconds: secs, exercisesDone: checked.size, exercisesTotal: day.total };
+
+  document.getElementById('sum-sub').textContent       = `${day.name} — ${day.title}`;
+  document.getElementById('sum-duration').textContent  = fmtTime(secs);
+  document.getElementById('sum-exercises').textContent = `${checked.size}/${day.total}`;
+  show('screen-summary');
+}
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const todayIdx = todayDayIdx();
+  const banner = document.getElementById('today-banner');
+  if (todayIdx === -1) {
+    banner.className = 'today-banner rest'; banner.onclick = null;
+    document.getElementById('today-label').textContent = 'Domingo';
+    document.getElementById('today-name').textContent  = 'Dia de descanso';
+    document.getElementById('today-sub').textContent   = 'Você merece descansar hoje!';
+    document.getElementById('today-arrow').style.background = 'var(--surface2)';
+  } else {
+    const day = DAYS[todayIdx], cached = cache[todayIdx];
+    banner.className = 'today-banner'; banner.onclick = () => openDay(todayIdx);
+    document.getElementById('today-label').textContent = 'Treino de hoje';
+    document.getElementById('today-name').textContent  = `${day.name} — Treino ${day.treino}`;
+    document.getElementById('today-sub').textContent   = cached?.completed
+      ? `Concluído em ${fmtTime(cached.durationSeconds||0)} — ${day.title}` : day.title;
+    document.getElementById('today-arrow').style.background = 'var(--accent)';
+  }
+  document.getElementById('week-grid').innerHTML = DAYS.map((day, i) => {
+    const isToday = i === todayIdx, cached = cache[i];
+    const isDone  = cached?.completed;
+    const isGT    = GT.dayIdx === i && (GT.running || GT.elapsed > 0);
+    const dur     = isDone ? fmtTime(cached.durationSeconds||0) : (isGT ? fmtTime(GT.seconds()) : null);
+    return `<div class="day-card ${isToday?'today':''} ${isDone?'done':''} ${isGT?'active-timer':''}" onclick="openDay(${i})">
+      ${isDone ? '<div class="dc-status">✓</div>' : ''}
+      <div class="dc-short">${day.short}</div>
+      <div class="dc-name">${day.name}</div>
+      <span class="dc-tag ${day.tag}">Treino ${day.treino}</span>
+      ${dur ? `<div class="dc-duration">${dur}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtTime(s) {
+  s = Math.max(0, Math.floor(s||0));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
+  return h>0 ? `${h}h${String(m).padStart(2,'0')}m` : `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async () => {
+  GT.load();
+  if (GT.running) GT._tick();
+  updateGlobalBar();
+  await loadAll();
+  renderHome();
+})();
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { GT.save(); if (GT.dayIdx >= 0) persistTimerForDay(GT.dayIdx); }
 });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/meu-treino/sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
