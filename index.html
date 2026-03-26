@@ -354,9 +354,9 @@ const GT = {
 
 function updateGlobalBar() {
   const bar = document.getElementById('gtbar');
-  const active = GT.dayIdx >= 0 && (GT.running || GT.elapsed > 0);
+  const onHome = document.getElementById('screen-home').classList.contains('active');
+  const active = GT.dayIdx >= 0 && (GT.running || GT.elapsed > 0) && onHome;
   bar.classList.toggle('on', active);
-  // Push all screens down so bar doesn't overlap
   document.querySelectorAll('.screen').forEach(s => s.style.paddingTop = active ? '40px' : '0');
   if (active) {
     document.getElementById('gtbar-time').textContent = fmtTime(GT.seconds());
@@ -458,6 +458,7 @@ function onWeightChange(exId, val) {
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  updateGlobalBar();
 }
 
 function goHome() {
