@@ -31,11 +31,13 @@
 
 ```
 /* GLOBAL TIMER BAR */
-.gtbar { display: none; position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; z-index: 100; background: var(--accent); padding: 10px 20px; align-items: center; justify-content: space-between; }
+.gtbar { display: none; position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; z-index: 100; background: var(--accent); padding: 8px 20px; align-items: center; justify-content: space-between; }
 .gtbar.on { display: flex; }
 .gtbar-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8); }
-.gtbar-time { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: white; letter-spacing: 0.05em; }
+.gtbar-time { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: white; letter-spacing: 0.05em; }
 .gtbar-day { font-size: 11px; color: rgba(255,255,255,0.8); }
+.gtbar-spacer { display: none; height: 40px; }
+.gtbar.on ~ * .gtbar-spacer, body.has-gtbar .gtbar-spacer { display: block; }
 
 /* HOME */
 .home-header { padding: 64px 20px 20px; }
@@ -354,12 +356,12 @@ const GT = {
 
 function updateGlobalBar() {
   const bar = document.getElementById('gtbar');
-  if (GT.dayIdx >= 0 && (GT.running || GT.elapsed > 0)) {
-    bar.classList.add('on');
+  const active = GT.dayIdx >= 0 && (GT.running || GT.elapsed > 0);
+  bar.classList.toggle('on', active);
+  document.body.style.paddingTop = active ? '40px' : '0';
+  if (active) {
     document.getElementById('gtbar-time').textContent = fmtTime(GT.seconds());
     document.getElementById('gtbar-day').textContent  = DAYS[GT.dayIdx]?.name || '';
-  } else {
-    bar.classList.remove('on');
   }
 }
 
