@@ -1,1132 +1,221 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Ateliê Arte">
-<meta name="theme-color" content="#7c3aed">
-<meta name="description" content="Seu espaço de estudos para PEB II Arte — SEED-PR">
-<link rel="manifest" id="pwa-manifest">
-<title>Ateliê de Estudos — PEB II Arte</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fredoka+One&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --purple: #7c3aed;
-    --purple-light: #ede9fe;
-    --teal: #0d9488;
-    --teal-light: #ccfbf1;
-    --pink: #db2777;
-    --pink-light: #fce7f3;
-    --orange: #ea580c;
-    --orange-light: #ffedd5;
-    --blue: #2563eb;
-    --blue-light: #dbeafe;
-    --green: #16a34a;
-    --green-light: #dcfce7;
-    --bg: #f8f7ff;
-    --card: #ffffff;
-    --text: #1e1b4b;
-    --text-muted: #6b7280;
-    --border: #e5e7eb;
-    --radius: 14px;
-    --radius-sm: 8px;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Meu Treino</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FF5C3A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meu Treino">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF5C3A'/%3E%3Crect x='12' y='44' width='76' height='12' rx='6' fill='white'/%3E%3Crect x='8' y='34' width='14' height='32' rx='7' fill='white'/%3E%3Crect x='78' y='34' width='14' height='32' rx='7' fill='white'/%3E%3Crect x='2' y='40' width='12' height='20' rx='6' fill='white'/%3E%3Crect x='86' y='40' width='12' height='20' rx='6' fill='white'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --bg: #0d0e10; --surface: #18191d; --surface2: #22242a;
+      --accent: #FF5C3A; --accent-soft: rgba(255,92,58,0.12);
+      --text: #f0f0f2; --muted: #6e7079; --border: rgba(255,255,255,0.07);
+      --success: #3ecf6e; --success-soft: rgba(62,207,110,0.12);
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; line-height: 1.5; overflow-x: hidden; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100vh; }
+    .screen { display: none; min-height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
 
-  /* HEADER */
-  .header {
-    background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #0d9488 100%);
-    padding: 20px 24px 0;
-    color: white;
-    position: relative;
-    overflow: hidden;
-  }
-  .header::before {
-    content: '🎨';
-    position: absolute;
-    font-size: 120px;
-    right: -10px;
-    top: -20px;
-    opacity: 0.15;
-  }
-  .header-title { font-family: 'Fredoka One', sans-serif; font-size: 26px; letter-spacing: 0.5px; }
-  .header-sub { font-size: 13px; opacity: 0.85; margin-top: 2px; }
-  .streak-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.2); border-radius: 20px;
-    padding: 4px 12px; font-size: 13px; font-weight: 700; margin-top: 10px;
-  }
+    /* GLOBAL TIMER BAR */
+    .gtbar { display: none; position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; z-index: 100; background: var(--accent); padding: 8px 20px; align-items: center; justify-content: space-between; }
+    .gtbar.on { display: flex; }
+    .gtbar-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .gtbar-time { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: white; letter-spacing: 0.05em; }
+    .gtbar-day { font-size: 11px; color: rgba(255,255,255,0.8); }
 
-  /* NAV TABS */
-  .tabs { display: flex; gap: 2px; margin-top: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    padding: 10px 16px; border-radius: 10px 10px 0 0;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    color: rgba(255,255,255,0.7); transition: all 0.2s;
-    border: none; background: transparent; white-space: nowrap; flex-shrink: 0;
-  }
-  .tab.active { background: var(--bg); color: var(--purple); }
-  .tab:hover:not(.active) { color: white; background: rgba(255,255,255,0.15); }
+    /* HOME */
+    .home-header { padding: 52px 20px 20px; }
+    .home-header .greeting { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+    .home-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 46px; letter-spacing: 0.02em; line-height: 1; }
+    .home-header h1 span { color: var(--accent); }
+    .status-bar { display: flex; align-items: center; gap: 6px; padding: 0 20px 18px; font-size: 12px; color: var(--muted); }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+    .sync-dot.syncing { background: var(--accent); animation: pd 1s infinite; }
+    @keyframes pd { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .today-banner { margin: 0 20px 24px; background: var(--accent-soft); border: 1px solid rgba(255,92,58,.4); border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .today-banner.rest { background: rgba(255,255,255,.03); border-color: var(--border); cursor: default; }
+    .tb-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-bottom: 4px; }
+    .today-banner.rest .tb-label { color: var(--muted); }
+    .tb-name { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .02em; line-height: 1.1; margin-bottom: 2px; }
+    .tb-sub { font-size: 13px; color: var(--muted); }
+    .tb-arrow { width: 44px; height: 44px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { padding: 0 20px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .week-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 0 20px 40px; }
+    .day-card { background: var(--surface); border-radius: 14px; padding: 14px 12px; cursor: pointer; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .day-card.today { border-color: rgba(255,92,58,.5); background: var(--accent-soft); }
+    .day-card.done::before { content:''; position: absolute; top:0; left:0; right:0; height:2px; background: var(--success); }
+    .day-card.active-timer { border-color: rgba(255,92,58,.8); }
+    .dc-short { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 5px; }
+    .day-card.today .dc-short { color: var(--accent); }
+    .dc-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .02em; line-height: 1.1; margin-bottom: 6px; }
+    .dc-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+    .tag-a { background: rgba(139,127,232,.18); color: #b0a8f0; }
+    .tag-b { background: rgba(60,200,180,.18); color: #5dd9c8; }
+    .tag-c { background: rgba(255,92,58,.18); color: #ff8a74; }
+    .tag-d { background: rgba(236,72,153,.18); color: #f472b6; }
+    .dc-status { position: absolute; top: 10px; right: 10px; font-size: 13px; }
+    .dc-duration { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-  /* CONTENT */
-  .content { padding: 20px; max-width: 760px; margin: 0 auto; }
-  .section { display: none; }
-  .section.active { display: block; }
+    /* WORKOUT */
+    .workout-nav { display: flex; align-items: center; gap: 14px; padding: 52px 20px 16px; }
+    .back-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .wn-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 2px; }
+    .wn-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .02em; line-height: 1.1; }
+    .timer-section { padding: 8px 20px 22px; text-align: center; }
+    .timer-display { font-family: 'Bebas Neue', sans-serif; font-size: 96px; letter-spacing: .04em; line-height: 1; color: var(--text); margin-bottom: 18px; user-select: none; transition: color .3s; }
+    .timer-display.running { color: var(--accent); }
+    .timer-display.finished { color: var(--success); }
+    .timer-controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .timer-btn { height: 46px; border-radius: 100px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; }
+    .timer-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .timer-btn.primary { background: var(--accent); color: white; padding: 0 32px; min-width: 140px; }
+    .timer-btn.secondary { background: var(--surface2); color: var(--muted); padding: 0 22px; border: 1px solid var(--border); }
+    .progress-section { padding: 0 20px 18px; }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .pm-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .pm-count { font-size: 13px; font-weight: 600; }
+    .progress-track { height: 4px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 100px; transition: width .35s, background .3s; }
+    .progress-fill.full { background: var(--success); }
+    .exercise-list { flex: 1; overflow-y: auto; padding: 0 20px 130px; }
+    .ex-section { margin-bottom: 22px; }
+    .ex-sec-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .ex-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .ex-item:last-child { border-bottom: none; }
+    .ex-item.checked { opacity: .45; }
+    .ex-check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface2); background: var(--surface2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; cursor: pointer; }
+    .ex-item.checked .ex-check { background: var(--success); border-color: var(--success); }
+    .check-icon { width: 14px; height: 14px; opacity: 0; transition: opacity .2s; }
+    .ex-item.checked .check-icon { opacity: 1; }
+    .ex-info { flex: 1; min-width: 0; }
+    .ex-name { font-size: 15px; font-weight: 500; line-height: 1.3; }
+    .ex-item.checked .ex-name { text-decoration: line-through; }
+    .ex-sets { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .weight-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .weight-input { width: 56px; height: 34px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; text-align: center; padding: 0 4px; outline: none; }
+    .weight-input:focus { border-color: var(--accent); }
+    .weight-input::placeholder { color: var(--muted); font-size: 11px; }
+    .weight-unit { font-size: 11px; color: var(--muted); }
+    .workout-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 16px 20px 36px; background: linear-gradient(to top, var(--bg) 65%, transparent); pointer-events: none; }
+    .finish-btn { width: 100%; height: 56px; border-radius: 16px; border: none; background: var(--accent); color: white; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; pointer-events: all; }
+    .finish-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+    .finish-btn.done { background: var(--success); cursor: default; }
+    .undo-btn { width: 100%; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; pointer-events: all; margin-top: 8px; display: none; }
+    .undo-btn.show { display: block; }
 
-  /* CARDS */
-  .card {
-    background: var(--card); border-radius: var(--radius);
-    border: 1.5px solid var(--border); padding: 18px;
-    margin-bottom: 14px; transition: box-shadow 0.2s;
-  }
-  .card:hover { box-shadow: 0 4px 16px rgba(124,58,237,0.08); }
-  .card-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
-  .card-sub { font-size: 13px; color: var(--text-muted); }
+    /* SUMMARY */
+    .summary-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; }
+    .summary-icon { width: 84px; height: 84px; border-radius: 50%; background: var(--success-soft); border: 2px solid var(--success); display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+    .summary-title { font-family: 'Bebas Neue', sans-serif; font-size: 46px; line-height: 1; margin-bottom: 8px; }
+    .summary-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+    .summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 300px; margin-bottom: 44px; }
+    .stat-card { background: var(--surface); border-radius: 14px; padding: 18px 16px; border: 1px solid var(--border); }
+    .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .home-btn { width: 100%; max-width: 300px; height: 54px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; }
 
-  /* MODULE GRID */
-  .modules-grid { display: grid; gap: 12px; }
-  .module-card {
-    background: var(--card); border-radius: var(--radius);
-    border: 1.5px solid var(--border); padding: 16px;
-    cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
-  }
-  .module-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: var(--mod-color, var(--purple));
-  }
-  .module-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-  .module-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-  .module-icon {
-    width: 44px; height: 44px; border-radius: 12px; display: flex;
-    align-items: center; justify-content: center; font-size: 22px;
-    background: var(--mod-bg, var(--purple-light)); flex-shrink: 0;
-  }
-  .module-info { flex: 1; }
-  .module-name { font-size: 14px; font-weight: 800; color: var(--text); }
-  .module-topics { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; }
-  .progress-fill { height: 100%; border-radius: 3px; background: var(--mod-color, var(--purple)); transition: width 0.5s ease; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-  .topics-list { margin-top: 12px; display: none; border-top: 1px solid var(--border); padding-top: 12px; }
-  .topics-list.open { display: block; }
-  .topic-item {
-    display: flex; align-items: center; gap: 8px; padding: 6px 0;
-    font-size: 13px; cursor: pointer; border-radius: 6px; padding: 6px 8px;
-    transition: background 0.15s;
-  }
-  .topic-item:hover { background: var(--purple-light); }
-  .topic-check {
-    width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; flex-shrink: 0; cursor: pointer; transition: all 0.2s;
-  }
-  .topic-check.done { background: var(--green); border-color: var(--green); color: white; }
-
-  /* QUIZ */
-  .quiz-setup { display: block; }
-  .quiz-active { display: none; }
-  .topic-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
-  .topic-btn {
-    padding: 12px; border-radius: var(--radius-sm); border: 2px solid var(--border);
-    background: white; cursor: pointer; font-family: 'Nunito', sans-serif;
-    font-size: 13px; font-weight: 700; text-align: left; transition: all 0.2s;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .topic-btn:hover { border-color: var(--purple); background: var(--purple-light); }
-  .topic-btn.selected { border-color: var(--purple); background: var(--purple-light); color: var(--purple); }
-  .diff-btns { display: flex; gap: 8px; margin: 10px 0; }
-  .diff-btn {
-    flex: 1; padding: 8px; border-radius: var(--radius-sm); border: 2px solid var(--border);
-    background: white; cursor: pointer; font-family: 'Nunito', sans-serif;
-    font-size: 12px; font-weight: 700; text-align: center; transition: all 0.2s;
-  }
-  .diff-btn.selected { border-color: var(--purple); background: var(--purple); color: white; }
-  .btn-primary {
-    width: 100%; padding: 14px; border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    color: white; border: none; font-family: 'Nunito', sans-serif;
-    font-size: 15px; font-weight: 800; cursor: pointer; transition: opacity 0.2s;
-  }
-  .btn-primary:hover { opacity: 0.9; }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .question-box {
-    background: linear-gradient(135deg, var(--purple-light), var(--pink-light));
-    border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
-    border-left: 4px solid var(--purple);
-  }
-  .question-label { font-size: 11px; font-weight: 800; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-  .question-text { font-size: 15px; font-weight: 600; line-height: 1.6; color: var(--text); }
-  .alt-btn {
-    width: 100%; padding: 13px 16px; border-radius: var(--radius-sm);
-    border: 2px solid var(--border); background: white; cursor: pointer;
-    font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 600;
-    text-align: left; transition: all 0.18s; display: flex; align-items: flex-start; gap: 12px;
-    margin-bottom: 8px; color: var(--text); line-height: 1.5;
-  }
-  .alt-btn:hover:not(:disabled) { border-color: var(--purple); background: var(--purple-light); }
-  .alt-btn:disabled { cursor: default; }
-  .alt-btn.correct { border-color: var(--green) !important; background: var(--green-light) !important; color: var(--green) !important; }
-  .alt-btn.wrong   { border-color: var(--pink)  !important; background: var(--pink-light)  !important; color: var(--pink)  !important; }
-  .alt-btn.reveal  { border-color: var(--green) !important; background: var(--green-light) !important; color: var(--green) !important; }
-  .alt-letter {
-    min-width: 26px; height: 26px; border-radius: 6px; background: var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px;
-    transition: all 0.18s;
-  }
-  .alt-btn.correct .alt-letter { background: var(--green); color: white; }
-  .alt-btn.wrong   .alt-letter { background: var(--pink);  color: white; }
-  .alt-btn.reveal  .alt-letter { background: var(--green); color: white; }
-  .feedback-box {
-    margin-top: 14px; border-radius: var(--radius); padding: 18px;
-    border: 2px solid var(--border); display: none;
-  }
-  .feedback-box.show { display: block; }
-  .feedback-text { font-size: 14px; line-height: 1.7; color: var(--text); }
-  .feedback-text h4 { font-size: 13px; font-weight: 800; margin-top: 12px; margin-bottom: 4px; }
-  .btn-next {
-    margin-top: 14px; padding: 10px 20px; border-radius: var(--radius-sm);
-    background: var(--orange); color: white; border: none; font-family: 'Nunito', sans-serif;
-    font-size: 13px; font-weight: 800; cursor: pointer;
-  }
-  .score-bar {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
-    padding: 10px 14px; background: var(--bg); border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border);
-  }
-  .score-pills { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-  .score-pill {
-    width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
-    background: white; font-size: 10px; display: flex; align-items: center; justify-content: center;
-  }
-  .score-pill.c { background: var(--green); border-color: var(--green); color: white; }
-  .score-pill.w { background: var(--pink);  border-color: var(--pink);  color: white; }
-  .loading-dots { display: inline-flex; gap: 4px; align-items: center; }
-  .loading-dots span {
-    width: 7px; height: 7px; background: var(--purple); border-radius: 50%;
-    animation: bounce 1.2s infinite;
-  }
-  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,80%,100%{transform:scale(0.7);opacity:0.5} 40%{transform:scale(1);opacity:1} }
-
-  /* RESOURCES */
-  .resource-section-title {
-    font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--text-muted); margin: 20px 0 10px;
-  }
-  .resource-card {
-    background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border);
-    padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start;
-    cursor: pointer; transition: all 0.2s; text-decoration: none;
-  }
-  .resource-card:hover { border-color: var(--purple); transform: translateX(4px); }
-  .resource-icon {
-    width: 40px; height: 40px; border-radius: 10px; display: flex;
-    align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
-  }
-  .resource-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .resource-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .tag {
-    display: inline-block; padding: 2px 8px; border-radius: 20px;
-    font-size: 11px; font-weight: 700; margin-top: 4px; margin-right: 4px;
-  }
-
-  /* CRONOGRAMA */
-  .day-card {
-    background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border);
-    overflow: hidden; margin-bottom: 10px;
-  }
-  .day-header {
-    padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer;
-  }
-  .day-name { font-size: 14px; font-weight: 800; }
-  .day-focus { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .day-badge {
-    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
-  }
-  .day-schedule { padding: 0 16px 12px; display: none; }
-  .day-schedule.open { display: block; }
-  .time-slot { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .time-slot:last-child { border-bottom: none; }
-  .time { font-weight: 700; color: var(--purple); min-width: 50px; }
-  .activity { color: var(--text); }
-  .mins { color: var(--text-muted); font-size: 11px; margin-top: 1px; }
-
-  /* STATS BAR */
-  .stats-bar {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
-  }
-  .stat-card {
-    background: var(--card); border-radius: var(--radius-sm); border: 1.5px solid var(--border);
-    padding: 12px; text-align: center;
-  }
-  .stat-num { font-size: 22px; font-weight: 800; }
-  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-  /* LEITURA */
-  .chapter-card {
-    background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border);
-    margin-bottom: 10px; overflow: hidden; transition: box-shadow 0.2s;
-  }
-  .chapter-card:hover { box-shadow: 0 4px 16px rgba(124,58,237,0.08); }
-  .chapter-header {
-    display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer;
-  }
-  .chapter-num {
-    min-width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
-    justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0;
-    background: var(--purple-light); color: var(--purple);
-  }
-  .chapter-num.done { background: var(--green); color: white; }
-  .chapter-info { flex: 1; }
-  .chapter-title { font-size: 14px; font-weight: 800; color: var(--text); }
-  .chapter-period { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-  .chapter-status {
-    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-    white-space: nowrap;
-  }
-  .chapter-body { padding: 0 16px 14px; display: none; border-top: 1px solid var(--border); }
-  .chapter-body.open { display: block; }
-  .notes-area {
-    width: 100%; padding: 12px; border-radius: var(--radius-sm); margin-top: 12px;
-    border: 2px solid var(--border); font-family: 'Nunito', sans-serif; font-size: 13px;
-    resize: vertical; outline: none; transition: border-color 0.2s; background: white;
-    min-height: 80px; color: var(--text); box-sizing: border-box;
-  }
-  .notes-area:focus { border-color: var(--purple); }
-  .btn-save-note {
-    margin-top: 8px; padding: 7px 16px; border-radius: var(--radius-sm);
-    background: var(--purple); color: white; border: none; font-family: 'Nunito', sans-serif;
-    font-size: 12px; font-weight: 800; cursor: pointer; transition: opacity 0.2s;
-  }
-  .btn-save-note:hover { opacity: 0.85; }
-  .saved-badge { font-size: 11px; color: var(--green); font-weight: 700; margin-left: 8px; display: none; }
-  .read-toggle {
-    display: flex; align-items: center; gap: 8px; margin-top: 12px;
-    font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text-muted);
-  }
-  .read-toggle input { cursor: pointer; accent-color: var(--green); width: 16px; height: 16px; }
-
-  /* MAPAS MENTAIS */
-  .map-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 20px; }
-  .map-btn {
-    padding: 8px 14px; border-radius: 20px; border: 2px solid var(--border);
-    background: white; cursor: pointer; font-family: 'Nunito', sans-serif;
-    font-size: 12px; font-weight: 700; transition: all 0.2s; color: var(--text);
-  }
-  .map-btn:hover { border-color: var(--purple); background: var(--purple-light); }
-  .map-btn.active { border-color: var(--purple); background: var(--purple); color: white; }
-  .map-container { width: 100%; overflow-x: auto; }
-  .map-container svg { display: block; max-width: 100%; height: auto; }
-
-  /* SCROLL */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-</style>
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(14px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 22px; border-radius: 100px; font-size: 13px; opacity: 0; transition: all .28s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    ::-webkit-scrollbar { width: 0; }
+  </style>
 </head>
 <body>
+<div id="app">
 
-<div class="header">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div>
-      <div class="header-title">🎨 Ateliê de Estudos</div>
-      <div class="header-sub">PEB II Arte · SEED-PR · Seu espaço de estudo</div>
-      <div class="streak-badge" id="streak-badge">🔥 <span id="streak-num">0</span> dias seguidos</div>
+  <div class="gtbar" id="gtbar">
+    <span class="gtbar-label">Treino em andamento</span>
+    <span class="gtbar-time" id="gtbar-time">00:00</span>
+    <span class="gtbar-day" id="gtbar-day"></span>
+  </div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="home-header">
+      <div class="greeting">Bora treinar,</div>
+      <h1>ANA <span>GABRIELLA</span></h1>
+    </div>
+    <div class="status-bar">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">Carregando...</span>
+    </div>
+    <div id="today-banner" class="today-banner">
+      <div>
+        <div class="tb-label" id="today-label">Treino de hoje</div>
+        <div class="tb-name" id="today-name">—</div>
+        <div class="tb-sub" id="today-sub">—</div>
+      </div>
+      <div class="tb-arrow" id="today-arrow">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+    <div class="section-title">Semana completa</div>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div id="screen-workout" class="screen">
+    <div class="workout-nav">
+      <div class="back-btn" onclick="goHome()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </div>
+      <div>
+        <div class="wn-label" id="wn-label">Treino</div>
+        <div class="wn-title" id="wn-title">—</div>
+      </div>
+    </div>
+    <div class="timer-section">
+      <div class="timer-display" id="timer-display">00:00</div>
+      <div class="timer-controls">
+        <button class="timer-btn secondary" onclick="resetTimer()">Resetar</button>
+        <button class="timer-btn primary" id="timer-btn" onclick="toggleTimer()">Iniciar</button>
+      </div>
+    </div>
+    <div class="progress-section">
+      <div class="progress-meta">
+        <span class="pm-label">Progresso</span>
+        <span class="pm-count" id="progress-count">0 / 0</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="exercise-list" id="exercise-list"></div>
+    <div class="workout-footer">
+      <button class="finish-btn" id="finish-btn" onclick="finishWorkout()" disabled>Finalizar Treino</button>
+      <button class="undo-btn" id="undo-btn" onclick="undoFinish()">↩ Desfazer conclusão</button>
     </div>
   </div>
-  <div class="tabs">
-    <button class="tab active" onclick="showSection('modulos')">📚 Módulos</button>
-    <button class="tab" onclick="showSection('questoes')">✏️ Questões</button>
-    <button class="tab" onclick="showSection('leitura')">📖 Leitura</button>
-    <button class="tab" onclick="showSection('mapas')">🗺️ Mapas</button>
-    <button class="tab" onclick="showSection('recursos')">🎬 Recursos</button>
-    <button class="tab" onclick="showSection('cronograma')">📅 Cronograma</button>
+
+  <!-- SUMMARY -->
+  <div id="screen-summary" class="screen">
+    <div class="summary-wrap">
+      <div class="summary-icon">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="summary-title">TREINO FEITO!</div>
+      <div class="summary-sub" id="sum-sub">—</div>
+      <div class="summary-stats">
+        <div class="stat-card"><div class="stat-val" id="sum-duration">—</div><div class="stat-label">Duração</div></div>
+        <div class="stat-card"><div class="stat-val" id="sum-exercises">—</div><div class="stat-label">Exercícios</div></div>
+      </div>
+      <button class="home-btn" onclick="goHome()">Voltar ao início</button>
+    </div>
   </div>
 </div>
-
-<div class="content">
-
-  <!-- MÓDULOS -->
-  <div class="section active" id="section-modulos">
-    <div class="stats-bar" style="margin-top:16px">
-      <div class="stat-card">
-        <div class="stat-num" style="color:var(--purple)" id="total-done">0</div>
-        <div class="stat-label">Tópicos estudados</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" style="color:var(--teal)" id="total-topics">0</div>
-        <div class="stat-label">Total de tópicos</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" style="color:var(--pink)" id="total-pct">0%</div>
-        <div class="stat-label">Progresso geral</div>
-      </div>
-    </div>
-    <div class="modules-grid" id="modules-grid"></div>
-  </div>
-
-  <!-- QUESTÕES -->
-  <div class="section" id="section-questoes">
-    <div style="margin-top:16px">
-      <div class="quiz-setup" id="quiz-setup">
-        <div class="card">
-          <div class="card-title">🧠 Prática de Questões com IA</div>
-          <div class="card-sub">Escolha um tema e responda. Vou avaliar sua resposta com feedback detalhado!</div>
-          <div class="resource-section-title">Tema</div>
-          <div class="topic-select-grid" id="quiz-topics"></div>
-          <div class="resource-section-title">Dificuldade</div>
-          <div class="diff-btns">
-            <button class="diff-btn selected" onclick="selectDiff(this,'fácil')">🟢 Fácil</button>
-            <button class="diff-btn" onclick="selectDiff(this,'médio')">🟡 Médio</button>
-            <button class="diff-btn" onclick="selectDiff(this,'difícil')">🔴 Difícil</button>
-          </div>
-          <button class="btn-primary" id="start-quiz-btn" onclick="startQuiz()">
-            Gerar Questão ✨
-          </button>
-        </div>
-      </div>
-
-      <div class="quiz-active" id="quiz-active">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:700;color:var(--purple)" id="quiz-topic-label"></div>
-          <button onclick="resetQuiz()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;font-weight:700">
-            ← Novo tema
-          </button>
-        </div>
-        <div class="score-bar">
-          <div style="font-size:12px;font-weight:800;color:var(--text-muted);white-space:nowrap">Placar</div>
-          <div class="score-pills" id="score-pills"></div>
-          <div style="font-size:13px;font-weight:800;white-space:nowrap">
-            <span id="score-correct" style="color:var(--green)">0</span>
-            <span style="color:var(--text-muted)"> / </span>
-            <span id="score-total" style="color:var(--text-muted)">0</span>
-          </div>
-        </div>
-        <div class="question-box" id="question-box">
-          <div class="question-label" id="q-num-label">Questão</div>
-          <div class="question-text" id="question-text">
-            <div style="display:flex;align-items:center;gap:10px">
-              Gerando questão <div class="loading-dots"><span></span><span></span><span></span></div>
-            </div>
-          </div>
-        </div>
-        <div id="alternatives-area"></div>
-        <div class="feedback-box" id="feedback-box">
-          <div class="feedback-text" id="feedback-text"></div>
-          <button class="btn-next" onclick="nextQuestion()">Próxima questão →</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RECURSOS -->
-  <div class="section" id="section-recursos">
-    <div style="margin-top:16px">
-      <div class="resource-section-title">📺 Videoaulas — YouTube</div>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=Arte+Educação+Ana+Mae+Barbosa" target="_blank">
-        <div class="resource-icon" style="background:#fee2e2">🎨</div>
-        <div>
-          <div class="resource-title">Ana Mae Barbosa — Abordagem Triangular</div>
-          <div class="resource-desc">Busca no YouTube por vídeos explicando a Proposta Triangular no ensino de Arte</div>
-          <span class="tag" style="background:var(--purple-light);color:var(--purple)">Arte-Educação</span>
-        </div>
-      </a>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=BNCC+ensino+de+artes+visuais" target="_blank">
-        <div class="resource-icon" style="background:#dcfce7">📋</div>
-        <div>
-          <div class="resource-title">BNCC na prática — Ensino de Artes</div>
-          <div class="resource-desc">Videoaulas sobre competências, habilidades e componentes curriculares de Arte na BNCC</div>
-          <span class="tag" style="background:var(--teal-light);color:var(--teal)">BNCC</span>
-        </div>
-      </a>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=modernismo+brasileiro+arte+historia" target="_blank">
-        <div class="resource-icon" style="background:#ffedd5">🏛️</div>
-        <div>
-          <div class="resource-title">História da Arte Brasileira</div>
-          <div class="resource-desc">Modernismo, Semana de 22, Tarsila do Amaral, Di Cavalcanti e outros movimentos</div>
-          <span class="tag" style="background:var(--orange-light);color:var(--orange)">História da Arte</span>
-        </div>
-      </a>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=Nise+da+Silveira+arteterapia+documentário" target="_blank">
-        <div class="resource-icon" style="background:#fce7f3">🧠</div>
-        <div>
-          <div class="resource-title">Nise da Silveira — Arteterapia</div>
-          <div class="resource-desc">Documentários e aulas sobre a obra revolucionária de Nise da Silveira</div>
-          <span class="tag" style="background:var(--pink-light);color:var(--pink)">Arteterapia</span>
-        </div>
-      </a>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=Escola+Nova+Anísio+Teixeira+educação" target="_blank">
-        <div class="resource-icon" style="background:#dbeafe">🏫</div>
-        <div>
-          <div class="resource-title">Escola Nova — Pedagogia</div>
-          <div class="resource-desc">Anísio Teixeira, Dewey, e o movimento da Escola Nova no contexto brasileiro</div>
-          <span class="tag" style="background:var(--blue-light);color:var(--blue)">Pedagogia</span>
-        </div>
-      </a>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=LDB+lei+diretrizes+bases+educação+concurso" target="_blank">
-        <div class="resource-icon" style="background:#dcfce7">⚖️</div>
-        <div>
-          <div class="resource-title">LDB & Legislação para Concursos</div>
-          <div class="resource-desc">Lei 9.394/96 comentada — os artigos mais cobrados em provas de pedagogia e educação</div>
-          <span class="tag" style="background:var(--green-light);color:var(--green)">Legislação</span>
-        </div>
-      </a>
-      <a class="resource-card" href="https://www.youtube.com/results?search_query=Vygotsky+Piaget+desenvolvimento+cognitivo+educação" target="_blank">
-        <div class="resource-icon" style="background:#ede9fe">👶</div>
-        <div>
-          <div class="resource-title">Piaget & Vygotsky — Psicologia da Educação</div>
-          <div class="resource-desc">Desenvolvimento cognitivo, ZDP, construtivismo e sociointeracionismo para provas</div>
-          <span class="tag" style="background:var(--purple-light);color:var(--purple)">Psicologia</span>
-        </div>
-      </a>
-
-      <div class="resource-section-title" style="margin-top:24px">📄 Documentos Oficiais</div>
-      <a class="resource-card" href="http://basenacionalcomum.mec.gov.br/" target="_blank">
-        <div class="resource-icon" style="background:#dcfce7">📗</div>
-        <div>
-          <div class="resource-title">Base Nacional Comum Curricular (BNCC)</div>
-          <div class="resource-desc">Documento oficial — leia o capítulo de Linguagens e as habilidades de Arte</div>
-          <span class="tag" style="background:var(--teal-light);color:var(--teal)">Oficial</span>
-        </div>
-      </a>
-      <a class="resource-card" href="http://www.planalto.gov.br/ccivil_03/leis/l9394.htm" target="_blank">
-        <div class="resource-icon" style="background:#fce7f3">📕</div>
-        <div>
-          <div class="resource-title">LDB — Lei 9.394/96</div>
-          <div class="resource-desc">Lei de Diretrizes e Bases da Educação Nacional — texto completo</div>
-          <span class="tag" style="background:var(--pink-light);color:var(--pink)">Legislação</span>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <!-- LEITURA -->
-  <div class="section" id="section-leitura">
-    <div style="margin-top:16px">
-      <div class="card" style="border-left:4px solid var(--orange)">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:32px">📚</span>
-          <div>
-            <div class="card-title">A História da Arte — E.H. Gombrich</div>
-            <div class="card-sub">Acompanhe sua leitura capítulo a capítulo e registre suas anotações</div>
-          </div>
-        </div>
-        <div style="margin-top:12px;display:flex;gap:16px">
-          <div style="text-align:center">
-            <div style="font-size:20px;font-weight:800;color:var(--orange)" id="chapters-read">0</div>
-            <div style="font-size:11px;color:var(--text-muted)">Lidos</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:20px;font-weight:800;color:var(--text-muted)" id="chapters-total">28</div>
-            <div style="font-size:11px;color:var(--text-muted)">Total</div>
-          </div>
-          <div style="flex:1;display:flex;align-items:center;padding-left:8px">
-            <div style="width:100%">
-              <div class="progress-bar"><div class="progress-fill" id="reading-progress" style="width:0%;background:var(--orange)"></div></div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:3px" id="reading-pct">0% lido</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="chapters-grid"></div>
-    </div>
-  </div>
-
-  <!-- MAPAS MENTAIS -->
-  <div class="section" id="section-mapas">
-    <div style="margin-top:16px">
-      <div class="card" style="border-left:4px solid var(--purple)">
-        <div class="card-title">🗺️ Mapas Mentais</div>
-        <div class="card-sub">Visualize os temas principais de forma organizada — toque nos nós para explorar</div>
-      </div>
-      <div class="map-selector" id="map-selector"></div>
-      <div class="map-container" id="map-container"></div>
-    </div>
-  </div>
-
-  <!-- CRONOGRAMA -->
-  <div class="section" id="section-cronograma">
-    <div style="margin-top:16px">
-      <div class="card" style="border-left:4px solid var(--purple)">
-        <div class="card-title">📅 Plano Semanal Dinâmico</div>
-        <div class="card-sub" id="schedule-subtitle">Carregando semana atual...</div>
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <div id="week-badge" style="font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;background:var(--purple-light);color:var(--purple)"></div>
-          <div id="week-progress-label" style="font-size:12px;color:var(--text-muted)"></div>
-        </div>
-        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="week-progress-bar" style="background:var(--purple)"></div></div>
-      </div>
-      <div id="schedule-grid"></div>
-    </div>
-  </div>
-
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ─── DATA ──────────────────────────────────────────────────────
-const MODULES = [
-  {
-    id: 'arte-edu',
-    icon: '🎨',
-    name: 'Arte-Educação',
-    color: '--purple',
-    bg: '--purple-light',
-    topics: [
-      'Abordagem Triangular — Ana Mae Barbosa',
-      'Leitura de imagem (apreciação)',
-      'Contextualização histórica',
-      'Fazer artístico',
-      'Nise da Silveira e arteterapia',
-      'Arte-educação e inclusão',
-      'Herbert Read — Educação pela Arte',
-    ]
-  },
-  {
-    id: 'bncc-pcn',
-    icon: '📋',
-    name: 'BNCC & PCN',
-    color: '--teal',
-    bg: '--teal-light',
-    topics: [
-      'Estrutura da BNCC — Linguagens',
-      'Competências gerais da BNCC',
-      'Habilidades de Arte (EF e EM)',
-      'PCN de Arte — Artes Visuais',
-      'PCN — Dança, Música, Teatro',
-      'Arte integrada e contextualização',
-    ]
-  },
-  {
-    id: 'historia-arte',
-    icon: '🏛️',
-    name: 'História da Arte',
-    color: '--orange',
-    bg: '--orange-light',
-    topics: [
-      'Arte Pré-histórica e Antiga',
-      'Arte Medieval e Renascença',
-      'Barroco e Neoclassicismo',
-      'Impressionismo e Vanguardas europeias',
-      'Arte Moderna Brasileira',
-      'Semana de Arte Moderna de 1922',
-      'Tarsila do Amaral e o Antropofagismo',
-      'Arte Contemporânea',
-    ]
-  },
-  {
-    id: 'didatica',
-    icon: '✏️',
-    name: 'Didática & Metodologia',
-    color: '--pink',
-    bg: '--pink-light',
-    topics: [
-      'Planejamento de aula e sequência didática',
-      'Objetivos de aprendizagem',
-      'Avaliação em Arte',
-      'Metodologias ativas',
-      'Mediação cultural',
-      'Portfólio como instrumento avaliativo',
-    ]
-  },
-  {
-    id: 'psicologia',
-    icon: '🧠',
-    name: 'Psicologia da Educação',
-    color: '--blue',
-    bg: '--blue-light',
-    topics: [
-      'Piaget — desenvolvimento cognitivo',
-      'Vygotsky — ZDP e aprendizado social',
-      'Freud e a expressão artística',
-      'Lowenfeld — desenvolvimento artístico infantil',
-      'Múltiplas inteligências (Gardner)',
-      'Motivação e aprendizagem',
-    ]
-  },
-  {
-    id: 'legislacao',
-    icon: '⚖️',
-    name: 'Legislação Educacional',
-    color: '--green',
-    bg: '--green-light',
-    topics: [
-      'LDB 9.394/96 — artigos essenciais',
-      'ECA — Estatuto da Criança',
-      'PNE — Plano Nacional de Educação',
-      'Estatuto do Professor (PR)',
-      'Regimento Escolar',
-      'Inclusão — Lei 13.146/2015',
-    ]
-  },
-  {
-    id: 'escola-nova',
-    icon: '🏫',
-    name: 'Escola Nova & Teorias Pedagógicas',
-    color: '--purple',
-    bg: '--purple-light',
-    topics: [
-      'Escola Nova — Anísio Teixeira',
-      'John Dewey — aprender fazendo',
-      'Manifesto dos Pioneiros (1932)',
-      'Pedagogia Crítica — Paulo Freire',
-      'Escola Tradicional vs Renovada',
-      'Construtivismo na prática',
-    ]
-  },
-];
-
-// Dias da semana com cores e atividades fixas (o tópico muda dinamicamente)
-const WEEK_DAYS = [
-  { day: 'Segunda-feira', color: '--purple',  type1: 'estudar',  type2: 'questão', min1: '30min', min2: '20min', min3: '10min' },
-  { day: 'Terça-feira',   color: '--teal',    type1: 'revisar',  type2: 'questão', min1: '25min', min2: '20min', min3: '15min' },
-  { day: 'Quarta-feira',  color: '--orange',  type1: 'criar',    type2: 'questão', min1: '30min', min2: '20min', min3: '10min' },
-  { day: 'Quinta-feira',  color: '--pink',    type1: 'revisar',  type2: 'questão', min1: '25min', min2: '20min', min3: '15min' },
-  { day: 'Sexta-feira',   color: '--blue',    type1: 'ler',      type2: 'questão', min1: '20min', min2: '20min', min3: '20min' },
-  { day: 'Sábado',        color: '--green',   type1: 'questão',  type2: 'revisar', min1: '40min', min2: '20min', min3: null    },
-  { day: 'Domingo',       color: '--purple',  type1: 'criar',    type2: 'ler',     min1: '30min', min2: '20min', min3: null    },
-];
-
-// Flatten de todos os tópicos de todos os módulos
-function getAllTopics() {
-  const list = [];
-  MODULES.forEach(m => {
-    m.topics.forEach((t, i) => {
-      list.push({ topic: t, moduleId: m.id, moduleName: m.name, moduleIcon: m.icon, color: m.color, bg: m.bg, topicIndex: i });
-    });
-  });
-  return list;
-}
-
-// Calcula semana atual desde data de início fixa (25/03/2025)
-function getCurrentWeekIndex() {
-  const start = new Date('2025-03-25');
-  const now = new Date();
-  const diffMs = now - start;
-  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000));
-  return Math.max(0, diffWeeks);
-}
-
-// Retorna os 5 tópicos da semana atual (seg~sex), ciclando pelos tópicos
-function getWeekTopics(weekIndex) {
-  const all = getAllTopics();
-  const topics = [];
-  for (let i = 0; i < 5; i++) {
-    const idx = (weekIndex * 5 + i) % all.length;
-    topics.push(all[idx]);
-  }
-  return topics;
-}
-
-function getActivityLabel(type, topicName, moduleName) {
-  const labels = {
-    'estudar': `Estudar: ${topicName}`,
-    'revisar': `Revisar: ${topicName}`,
-    'criar':   `Criar mapa mental: ${topicName}`,
-    'ler':     `Leitura e anotações: ${topicName}`,
-    'questão': `Questões sobre: ${moduleName}`,
-    'comparar':`Comparar conceitos: ${topicName}`,
-    'anotar':  `Anotar dúvidas sobre: ${topicName}`,
-  };
-  return labels[type] || topicName;
-}
-
-function renderSchedule() {
-  const typeColors = {
-    'revisar': '--purple', 'questão': '--teal', 'ler': '--blue',
-    'criar': '--pink', 'comparar': '--orange', 'estudar': '--green', 'anotar': '--orange'
-  };
-  const typeBg = {
-    'revisar': '--purple-light', 'questão': '--teal-light', 'ler': '--blue-light',
-    'criar': '--pink-light', 'comparar': '--orange-light', 'estudar': '--green-light', 'anotar': '--orange-light'
-  };
-
-  const weekIndex = getCurrentWeekIndex();
-  const weekTopics = getWeekTopics(weekIndex);
-  const allTopics = getAllTopics();
-  const totalTopics = allTopics.length;
-  const studiedSoFar = (weekIndex * 5) % totalTopics;
-  const pct = Math.round((studiedSoFar / totalTopics) * 100);
-
-  // Atualiza cabeçalho
-  const today = new Date();
-  const dayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-  document.getElementById('schedule-subtitle').textContent =
-    `Semana ${weekIndex + 1} · Hoje é ${dayNames[today.getDay()]} · Cicla automaticamente todo domingo`;
-  document.getElementById('week-badge').textContent = `📚 Semana ${weekIndex + 1}`;
-  document.getElementById('week-progress-label').textContent = `${studiedSoFar} de ${totalTopics} tópicos cobertos no ciclo`;
-  document.getElementById('week-progress-bar').style.width = pct + '%';
-
-  // Dias seg~sex com tópico dinâmico, sáb e dom fixos
-  const todayIndex = today.getDay(); // 0=dom, 1=seg...
-
-  document.getElementById('schedule-grid').innerHTML = WEEK_DAYS.map((d, i) => {
-    const isToday = (i + 1) % 7 === todayIndex || (i === 6 && todayIndex === 0);
-    const isSat = i === 5;
-    const isSun = i === 6;
-
-    let badge, slots, cardColor;
-
-    if (isSat) {
-      badge = '🏆 Simulado da semana';
-      cardColor = d.color;
-      slots = [
-        { time: '40min', activity: 'Mini simulado: 10 questões variadas dos temas da semana', type: 'questão' },
-        { time: '20min', activity: 'Revisar erros e anotar pontos fracos', type: 'revisar' },
-      ];
-    } else if (isSun) {
-      const nextWeekTopics = getWeekTopics(weekIndex + 1);
-      const preview = nextWeekTopics.slice(0,2).map(t => t.topic).join(', ');
-      badge = '🔄 Revisão + próxima semana';
-      cardColor = d.color;
-      slots = [
-        { time: '30min', activity: `Mapa mental do tema mais difícil desta semana`, type: 'criar' },
-        { time: '20min', activity: `Prévia da próxima semana: ${preview}...`, type: 'ler' },
-      ];
-    } else {
-      const t = weekTopics[i];
-      badge = `${t.moduleIcon} ${t.topic}`;
-      cardColor = t.color;
-      slots = [
-        { time: d.min1, activity: getActivityLabel(d.type1, t.topic, t.moduleName), type: d.type1 },
-        { time: d.min2, activity: getActivityLabel('questão', t.topic, t.moduleName), type: 'questão' },
-        { time: d.min3 || '10min', activity: `Anotar dúvidas e revisar: ${t.moduleName}`, type: 'anotar' },
-      ];
-    }
-
-    const totalMin = slots.reduce((a, s) => a + parseInt(s.time), 0);
-    const todayStyle = isToday ? `border: 2px solid var(${cardColor}); box-shadow: 0 4px 16px rgba(0,0,0,0.08);` : '';
-    const dayKey = `week-${weekIndex}-day-${i}`;
-    const isDayDone = !!(dayChecks[dayKey]);
-    const doneSlots = slots.filter((_, si) => dayChecks[dayKey + '-slot-' + si]).length;
-    const allSlotsDone = doneSlots === slots.length;
-
-    return `
-    <div class="day-card" style="${todayStyle}${isDayDone ? 'opacity:0.75;' : ''}">
-      <div class="day-header" onclick="toggleDay(${i})" style="background:var(${cardColor}15)">
-        <div style="display:flex;align-items:center;gap:10px;flex:1">
-          <div onclick="event.stopPropagation();toggleDayCheck('${dayKey}', ${i})"
-            style="width:24px;height:24px;border-radius:7px;border:2px solid var(${cardColor});
-            background:${isDayDone ? `var(${cardColor})` : 'white'};
-            display:flex;align-items:center;justify-content:center;
-            cursor:pointer;flex-shrink:0;font-size:13px;transition:all 0.2s">
-            ${isDayDone ? '<span style="color:white">✓</span>' : ''}
-          </div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div class="day-name" style="${isDayDone ? 'text-decoration:line-through;opacity:0.6' : ''}">${d.day}</div>
-              ${isToday ? '<span style="background:var(--purple);color:white;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px">HOJE</span>' : ''}
-              ${isDayDone ? '<span style="background:var(--green-light);color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px">✓ Concluído</span>' : ''}
-            </div>
-            <div class="day-focus" style="margin-top:2px">${badge}</div>
-          </div>
-        </div>
-        <span class="day-badge" style="background:var(${cardColor}22);color:var(${cardColor})">${doneSlots}/${slots.length} · ${totalMin}min</span>
-      </div>
-      <div class="day-schedule" id="day-${i}" ${isToday ? 'class="day-schedule open"' : 'class="day-schedule"'}>
-        ${slots.map((s, si) => {
-          const slotKey = dayKey + '-slot-' + si;
-          const isSlotDone = !!(dayChecks[slotKey]);
-          return `
-          <div class="time-slot" style="${isSlotDone ? 'opacity:0.5' : ''}">
-            <div class="time">${s.time}</div>
-            <div style="flex:1">
-              <div class="activity" style="${isSlotDone ? 'text-decoration:line-through' : ''}">${s.activity}</div>
-              <div class="mins" style="display:flex;align-items:center;gap:8px;margin-top:4px">
-                <span style="background:var(${typeBg[s.type]});color:var(${typeColors[s.type]});padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">${s.type}</span>
-              </div>
-            </div>
-            <div onclick="toggleSlotCheck('${slotKey}','${dayKey}',${i},${slots.length})"
-              style="width:20px;height:20px;border-radius:5px;border:2px solid var(--border);
-              background:${isSlotDone ? 'var(--green)' : 'white'};
-              display:flex;align-items:center;justify-content:center;
-              cursor:pointer;flex-shrink:0;font-size:11px;transition:all 0.2s;margin-left:8px">
-              ${isSlotDone ? '<span style="color:white">✓</span>' : ''}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}const QUIZ_TOPICS = [
-  { id: 'arte-edu', label: '🎨 Arte-Educação', icon: '🎨' },
-  { id: 'bncc', label: '📋 BNCC & PCN', icon: '📋' },
-  { id: 'historia', label: '🏛️ História da Arte', icon: '🏛️' },
-  { id: 'didatica', label: '✏️ Didática', icon: '✏️' },
-  { id: 'psicologia', label: '🧠 Psicologia', icon: '🧠' },
-  { id: 'legislacao', label: '⚖️ Legislação', icon: '⚖️' },
-];
-
-// ─── GOMBRICH CHAPTERS ─────────────────────────────────────────
-const GOMBRICH = [
-  { n:1,  title:'Estranhos Começos', period:'Arte Pré-histórica' },
-  { n:2,  title:'Arte para a Eternidade', period:'Egito, Mesopotâmia, Creta' },
-  { n:3,  title:'O Grande Despertar', period:'Grécia — séc. VII–V a.C.' },
-  { n:4,  title:'O Reino da Beleza', period:'Grécia — séc. IV a.C.' },
-  { n:5,  title:'Conquistadores do Mundo', period:'Grécia e Roma — séc. III a.C.' },
-  { n:6,  title:'Uma Encruzilhada de Religiões', period:'Roma — séc. I–IV d.C.' },
-  { n:7,  title:'Roma e Bizâncio', period:'Arte Cristã Primitiva' },
-  { n:8,  title:'Arte Ocidental em Fusão', period:'Europa — séc. VI–X' },
-  { n:9,  title:'A Igreja Militante', period:'Romântico — séc. XI–XII' },
-  { n:10, title:'A Igreja Triunfante', period:'Gótico — séc. XIII' },
-  { n:11, title:'Cortesãos e Burgueses', period:'Gótico Internacional — séc. XIV' },
-  { n:12, title:'A Conquista da Realidade', period:'Início Renascença — séc. XV' },
-  { n:13, title:'Tradição e Inovação I', period:'Renascença do Norte — séc. XV' },
-  { n:14, title:'Tradição e Inovação II', period:'Itália — séc. XV final' },
-  { n:15, title:'Harmonia Alcançada', period:'Alta Renascença — séc. XVI' },
-  { n:16, title:'Luz e Cor', period:'Veneza e Itália do Norte' },
-  { n:17, title:'A Nova Ciência e a Nova Arte', period:'Maneirismo — séc. XVI' },
-  { n:18, title:'Uma Visão Forçada', period:'Barroco — séc. XVII' },
-  { n:19, title:'Visão e Visões', period:'Holanda — Rembrandt' },
-  { n:20, title:'O Espelho da Natureza', period:'Holanda — paisagem e gênero' },
-  { n:21, title:'Poder e Glória I', period:'Barroco tardio — Bernini, Versalhes' },
-  { n:22, title:'Poder e Glória II', period:'Neoclassicismo e Rococó' },
-  { n:23, title:'A Ruptura da Tradição', period:'Revolução e Romantismo' },
-  { n:24, title:'Uma Revolução Permanente', period:'Impressionismo — séc. XIX' },
-  { n:25, title:'Em Busca de Novas Normas', period:'Pós-impressionismo' },
-  { n:26, title:'A Conquista do Espaço', period:'Vanguardas — séc. XX' },
-  { n:27, title:'Uma História Sem Fim?', period:'Arte Moderna e Contemporânea' },
-  { n:28, title:'Uma História Sem Fim — Parte II', period:'Arte Pós-guerra até hoje' },
-];
-
-let chapterData = {};
-let dayChecks = {}; // { 'ch-1': { read: true, notes: 'texto' }, ... }
-
-function renderChapters() {
-  const grid = document.getElementById('chapters-grid');
-  grid.innerHTML = GOMBRICH.map(ch => {
-    const key = 'ch-' + ch.n;
-    const data = chapterData[key] || {};
-    const isRead = !!data.read;
-    const notes = data.notes || '';
-    const statusColor = isRead ? 'var(--green)' : 'var(--orange)';
-    const statusBg = isRead ? 'var(--green-light)' : 'var(--orange-light)';
-    const statusLabel = isRead ? '✓ Lido' : 'Não lido';
-    return `
-    <div class="chapter-card">
-      <div class="chapter-header" onclick="toggleChapter('${key}')">
-        <div class="chapter-num ${isRead ? 'done' : ''}">${isRead ? '✓' : ch.n}</div>
-        <div class="chapter-info">
-          <div class="chapter-title">Cap. ${ch.n} — ${ch.title}</div>
-          <div class="chapter-period">${ch.period}</div>
-        </div>
-        <span class="chapter-status" style="background:${statusBg};color:${statusColor}">${statusLabel}</span>
-      </div>
-      <div class="chapter-body" id="body-${key}">
-        <label class="read-toggle">
-          <input type="checkbox" ${isRead ? 'checked' : ''} onchange="toggleRead('${key}', this.checked)">
-          Marcar como lido
-        </label>
-        <textarea class="notes-area" id="notes-${key}" placeholder="Suas anotações sobre este capítulo... conceitos importantes, obras citadas, conexões com o concurso...">${notes}</textarea>
-        <div style="display:flex;align-items:center">
-          <button class="btn-save-note" onclick="saveNote('${key}')">💾 Salvar anotação</button>
-          <span class="saved-badge" id="saved-${key}">✓ Salvo!</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-  updateReadingProgress();
-}
-
-function toggleChapter(key) {
-  const body = document.getElementById('body-' + key);
-  body.classList.toggle('open');
-}
-
-function toggleRead(key, checked) {
-  if (!chapterData[key]) chapterData[key] = {};
-  chapterData[key].read = checked;
-  saveChapterData();
-  renderChapters();
-  const body = document.getElementById('body-' + key);
-  if (body) body.classList.add('open');
-  bumpStreak();
-}
-
-function saveNote(key) {
-  const notes = document.getElementById('notes-' + key).value;
-  if (!chapterData[key]) chapterData[key] = {};
-  chapterData[key].notes = notes;
-  saveChapterData();
-  const badge = document.getElementById('saved-' + key);
-  badge.style.display = 'inline';
-  setTimeout(() => badge.style.display = 'none', 2000);
-}
-
-function updateReadingProgress() {
-  const total = GOMBRICH.length;
-  const done = GOMBRICH.filter(ch => chapterData['ch-' + ch.n]?.read).length;
-  const pct = Math.round((done / total) * 100);
-  document.getElementById('chapters-read').textContent = done;
-  document.getElementById('reading-progress').style.width = pct + '%';
-  document.getElementById('reading-pct').textContent = pct + '% lido';
-}
-
-async function saveChapterData() {
-  localStorage.setItem('chapterData', JSON.stringify(chapterData));
-  try {
-    if (db && window._fbSetDoc && window._fbDoc) {
-      await window._fbSetDoc(window._fbDoc(db, 'progresso', 'ana'), {
-        checkedTopics, quizStreak, lastStudyDay, chapterData, dayChecks,
-        updatedAt: new Date().toISOString()
-      });
-    }
-  } catch(e) { console.warn('Erro ao salvar capítulos', e); }
-}
-
-// ─── MAPAS MENTAIS ─────────────────────────────────────────────
-const MAPS = [
-  { id: 'triangular', label: '🎨 Abordagem Triangular' },
-  { id: 'bncc', label: '📋 BNCC & Arte' },
-  { id: 'piaget', label: '🧠 Piaget & Vygotsky' },
-  { id: 'historia', label: '🏛️ História da Arte' },
-  { id: 'ldb', label: '⚖️ LDB' },
-];
-
-const MAP_DATA = {
-  triangular: {
-    center: { label: 'Abordagem\nTriangular', color: '#7c3aed', bg: '#ede9fe' },
-    branches: [
-      { label: 'Fazer\nArtístico', color: '#db2777', bg: '#fce7f3', children: ['Produção própria', 'Experimentação', 'Expressão criativa'] },
-      { label: 'Leitura\nde Imagem', color: '#0d9488', bg: '#ccfbf1', children: ['Apreciação estética', 'Análise formal', 'Releitura'] },
-      { label: 'Contextualização\nHistórica', color: '#ea580c', bg: '#ffedd5', children: ['História da Arte', 'Cultura visual', 'Contexto social'] },
-    ],
-    autor: 'Ana Mae Barbosa'
-  },
-  bncc: {
-    center: { label: 'BNCC\nArte', color: '#0d9488', bg: '#ccfbf1' },
-    branches: [
-      { label: 'Artes\nVisuais', color: '#7c3aed', bg: '#ede9fe', children: ['Desenho', 'Pintura', 'Escultura', 'Fotografia'] },
-      { label: 'Dança', color: '#db2777', bg: '#fce7f3', children: ['Corpo e movimento', 'Improvisação', 'Coreografia'] },
-      { label: 'Música', color: '#ea580c', bg: '#ffedd5', children: ['Escuta', 'Criação', 'Notação musical'] },
-      { label: 'Teatro', color: '#16a34a', bg: '#dcfce7', children: ['Texto dramático', 'Encenação', 'Improvisação'] },
-    ],
-    autor: 'Base Nacional Comum Curricular'
-  },
-  piaget: {
-    center: { label: 'Psicologia\nda Educação', color: '#2563eb', bg: '#dbeafe' },
-    branches: [
-      { label: 'Piaget', color: '#7c3aed', bg: '#ede9fe', children: ['Sensório-motor', 'Pré-operacional', 'Operações concretas', 'Operações formais'] },
-      { label: 'Vygotsky', color: '#0d9488', bg: '#ccfbf1', children: ['ZDP', 'Mediação', 'Aprendizado social', 'Linguagem e pensamento'] },
-      { label: 'Lowenfeld', color: '#ea580c', bg: '#ffedd5', children: ['Garatuja', 'Pré-esquemático', 'Esquemático', 'Realismo'] },
-    ],
-    autor: 'Teorias do desenvolvimento'
-  },
-  historia: {
-    center: { label: 'História\nda Arte', color: '#ea580c', bg: '#ffedd5' },
-    branches: [
-      { label: 'Arte Antiga', color: '#6b7280', bg: '#f3f4f6', children: ['Pré-história', 'Egito', 'Grécia', 'Roma'] },
-      { label: 'Arte Medieval', color: '#7c3aed', bg: '#ede9fe', children: ['Românico', 'Gótico', 'Bizantino'] },
-      { label: 'Renascimento', color: '#0d9488', bg: '#ccfbf1', children: ['Da Vinci', 'Michelangelo', 'Rafael', 'Perspectiva'] },
-      { label: 'Arte Moderna', color: '#db2777', bg: '#fce7f3', children: ['Impressionismo', 'Cubismo', 'Surrealismo', 'Abstrato'] },
-      { label: 'Arte Brasileira', color: '#16a34a', bg: '#dcfce7', children: ['Semana de 22', 'Tarsila', 'Di Cavalcanti', 'Niemeyer'] },
-    ],
-    autor: 'Gombrich e outros'
-  },
-  ldb: {
-    center: { label: 'LDB\n9.394/96', color: '#16a34a', bg: '#dcfce7' },
-    branches: [
-      { label: 'Educação\nBásica', color: '#7c3aed', bg: '#ede9fe', children: ['Ed. Infantil', 'Ensino Fundamental', 'Ensino Médio'] },
-      { label: 'Direitos\nDocentes', color: '#0d9488', bg: '#ccfbf1', children: ['Plano de carreira', 'Formação continuada', 'Jornada de trabalho'] },
-      { label: 'Currículo', color: '#ea580c', bg: '#ffedd5', children: ['Base nacional', 'Parte diversificada', 'Arte obrigatória'] },
-      { label: 'Avaliação', color: '#db2777', bg: '#fce7f3', children: ['Contínua', 'Progressão', 'Recuperação'] },
-    ],
-    autor: 'Lei de Diretrizes e Bases'
-  }
-};
-
-let currentMap = 'triangular';
-
-function renderMapSelector() {
-  document.getElementById('map-selector').innerHTML = MAPS.map(m =>
-    `<button class="map-btn ${m.id === currentMap ? 'active' : ''}" onclick="selectMap('${m.id}')">${m.label}</button>`
-  ).join('');
-}
-
-function selectMap(id) {
-  currentMap = id;
-  renderMapSelector();
-  renderMap();
-}
-
-function renderMap() {
-  const map = MAP_DATA[currentMap];
-  if (!map) return;
-  const container = document.getElementById('map-container');
-  const branches = map.branches;
-  const n = branches.length;
-  const W = 680, CX = 340;
-  const CY = 120 + Math.ceil(n / 2) * 90;
-  const H = CY * 2 + 60;
-
-  // Position branches in a radial layout
-  const angles = [];
-  if (n === 3) angles.push(210, 270, 330);
-  else if (n === 4) angles.push(200, 250, 290, 340);
-  else angles.push(180, 220, 260, 300, 340);
-
-  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-
-  // Center node
-  svg += `<rect x="${CX-60}" y="${CY-28}" width="120" height="56" rx="14" fill="${map.center.bg}" stroke="${map.center.color}" stroke-width="2.5"/>`;
-  const cLines = map.center.label.split('\n');
-  if (cLines.length === 2) {
-    svg += `<text x="${CX}" y="${CY-6}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="13" font-weight="800" fill="${map.center.color}">${cLines[0]}</text>`;
-    svg += `<text x="${CX}" y="${CY+12}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="13" font-weight="800" fill="${map.center.color}">${cLines[1]}</text>`;
-  } else {
-    svg += `<text x="${CX}" y="${CY+5}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="13" font-weight="800" fill="${map.center.color}">${map.center.label}</text>`;
-  }
-  svg += `<text x="${CX}" y="${CY+38}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#9ca3af">${map.autor}</text>`;
-
-  branches.forEach((branch, i) => {
-    const angle = (angles[i] || (180 + i * (180/(n-1)))) * Math.PI / 180;
-    const dist = 150;
-    const bx = Math.round(CX + dist * Math.cos(angle));
-    const by = Math.round(CY + dist * Math.sin(angle));
-
-    // Line center → branch
-    svg += `<line x1="${CX}" y1="${CY}" x2="${bx}" y2="${by}" stroke="${branch.color}" stroke-width="2" stroke-opacity="0.5"/>`;
-
-    // Branch node
-    const bw = 110, bh = 46;
-    svg += `<rect x="${bx-bw/2}" y="${by-bh/2}" width="${bw}" height="${bh}" rx="10" fill="${branch.bg}" stroke="${branch.color}" stroke-width="1.5"/>`;
-    const bLines = branch.label.split('\n');
-    if (bLines.length === 2) {
-      svg += `<text x="${bx}" y="${by-5}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="12" font-weight="800" fill="${branch.color}">${bLines[0]}</text>`;
-      svg += `<text x="${bx}" y="${by+10}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="12" font-weight="800" fill="${branch.color}">${bLines[1]}</text>`;
-    } else {
-      svg += `<text x="${bx}" y="${by+5}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="12" font-weight="800" fill="${branch.color}">${branch.label}</text>`;
-    }
-
-    // Children leaves
-    branch.children.forEach((child, j) => {
-      const spread = (branch.children.length - 1) * 28;
-      const leafAngle = angle + (j - (branch.children.length - 1) / 2) * 0.38;
-      const leafDist = 110;
-      const lx = Math.round(bx + leafDist * Math.cos(leafAngle));
-      const ly = Math.round(by + leafDist * Math.sin(leafAngle));
-      const lw = Math.min(child.length * 7 + 20, 130);
-
-      svg += `<line x1="${bx}" y1="${by}" x2="${lx}" y2="${ly}" stroke="${branch.color}" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="4 3"/>`;
-      svg += `<rect x="${lx-lw/2}" y="${ly-15}" width="${lw}" height="30" rx="8" fill="white" stroke="${branch.color}" stroke-width="1" stroke-opacity="0.5"/>`;
-      svg += `<text x="${lx}" y="${ly+5}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" fill="${branch.color}" font-weight="600">${child}</text>`;
-    });
-  });
-
-  svg += '</svg>';
-  container.innerHTML = svg;
-}
-
-// ─── FIREBASE ──────────────────────────────────────────────────
-const FB_CONFIG = {
+const firebaseConfig = {
   apiKey: "AIzaSyB-rikqhsnKbrQ-XlWOdnCw-S8lch_kTLI",
   authDomain: "atelie-estudos.firebaseapp.com",
   projectId: "atelie-estudos",
@@ -1134,452 +223,441 @@ const FB_CONFIG = {
   messagingSenderId: "494720347993",
   appId: "1:494720347993:web:774a4858ccbe4ed3c92648"
 };
-const FB_DOC = 'progresso/ana';
-let db = null;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-async function initFirebase() {
-  try {
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const { getFirestore, doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const app = initializeApp(FB_CONFIG);
-    db = getFirestore(app);
-    window._fbSetDoc = setDoc;
-    window._fbDoc = doc;
-    window._fbGetDoc = getDoc;
-    // Carregar dados do Firestore
-    const snap = await getDoc(doc(db, 'progresso', 'ana'));
-    if (snap.exists()) {
-      const data = snap.data();
-      checkedTopics = data.checkedTopics || {};
-      quizStreak = data.quizStreak || 0;
-      lastStudyDay = data.lastStudyDay || '';
-      chapterData = data.chapterData || {};
-      dayChecks = data.dayChecks || {};
+const deviceId = 'ana_gabriella';
+
+// ── Week / date helpers ───────────────────────────────────────────────────────
+function getWeekStart() {
+  const d = new Date(), day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d); mon.setDate(d.getDate() + diff);
+  return mon.toISOString().split('T')[0];
+}
+function todayDayIdx() { const d = new Date().getDay(); return d === 0 ? -1 : d - 1; }
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const DAYS = [
+  { name:'Segunda', short:'Seg', treino:'A', tag:'tag-a', title:'Peito + Ombro + Tríceps', sections:[
+    { name:'Peito', exs:[{id:'seg_s1',name:'Supino com halteres',sets:'3×15'},{id:'seg_s2',name:'Voador (peck deck)',sets:'3×15'}]},
+    { name:'Ombro', exs:[{id:'seg_s3',name:'Desenvolvimento c/ halteres',sets:'3×12'},{id:'seg_s4',name:'Elevação lateral c/ halteres',sets:'3×15'}]},
+    { name:'Tríceps', exs:[{id:'seg_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'seg_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
+    { name:'Cardio', exs:[{id:'seg_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Terça', short:'Ter', treino:'B', tag:'tag-b', title:'Quadríceps + Panturrilha', sections:[
+    { name:'Quadríceps', exs:[{id:'ter_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'ter_s2',name:'Cadeira extensora',sets:'3×15'},{id:'ter_s3',name:'Leg press',sets:'3×15'}]},
+    { name:'Panturrilha', exs:[{id:'ter_s4',name:'Elevação de panturrilha em pé',sets:'3×20'},{id:'ter_s5',name:'Elevação de panturrilha sentada',sets:'3×20'}]},
+    { name:'Cardio', exs:[{id:'ter_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Quarta', short:'Qua', treino:'C', tag:'tag-c', title:'Costas + Bíceps', sections:[
+    { name:'Costas', exs:[{id:'qua_s1',name:'Puxada na polia (pulley)',sets:'3×15'},{id:'qua_s2',name:'Remada sentada na polia',sets:'3×15'},{id:'qua_s3',name:'Remada unilateral c/ haltere',sets:'3×12'}]},
+    { name:'Bíceps', exs:[{id:'qua_s4',name:'Rosca com halteres alternada',sets:'3×15'},{id:'qua_s5',name:'Rosca na polia (cabo baixo)',sets:'3×15'}]},
+    { name:'Cardio', exs:[{id:'qua_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Quinta', short:'Qui', treino:'D', tag:'tag-d', title:'Glúteos + Posterior', sections:[
+    { name:'Glúteos', exs:[{id:'qui_s1',name:'Hip thrust (elevação pélvica)',sets:'3×15'},{id:'qui_s2',name:'Abdução de quadril (máquina)',sets:'3×20'},{id:'qui_s3',name:'Agachamento sumô',sets:'3×15'}]},
+    { name:'Posterior', exs:[{id:'qui_s4',name:'Stiff com halteres',sets:'3×12'},{id:'qui_s5',name:'Cadeira flexora',sets:'3×15'}]},
+    { name:'Cardio', exs:[{id:'qui_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Sexta', short:'Sex', treino:'A', tag:'tag-a', title:'Peito + Ombro + Tríceps', sections:[
+    { name:'Peito', exs:[{id:'sex_s1',name:'Supino com halteres',sets:'3×15'},{id:'sex_s2',name:'Voador (peck deck)',sets:'3×15'}]},
+    { name:'Ombro', exs:[{id:'sex_s3',name:'Desenvolvimento c/ halteres',sets:'3×12'},{id:'sex_s4',name:'Elevação lateral c/ halteres',sets:'3×15'}]},
+    { name:'Tríceps', exs:[{id:'sex_s5',name:'Tríceps corda na polia',sets:'3×15'},{id:'sex_s6',name:'Tríceps testa c/ halteres',sets:'3×12'}]},
+    { name:'Cardio', exs:[{id:'sex_s7',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+  { name:'Sábado', short:'Sáb', treino:'B', tag:'tag-b', title:'Quadríceps + Panturrilha', sections:[
+    { name:'Quadríceps', exs:[{id:'sab_s1',name:'Agachamento livre (leve)',sets:'3×15'},{id:'sab_s2',name:'Cadeira extensora',sets:'3×15'},{id:'sab_s3',name:'Leg press',sets:'3×15'}]},
+    { name:'Panturrilha', exs:[{id:'sab_s4',name:'Elevação de panturrilha em pé',sets:'3×20'},{id:'sab_s5',name:'Elevação de panturrilha sentada',sets:'3×20'}]},
+    { name:'Cardio', exs:[{id:'sab_s6',name:'Bicicleta ergométrica',sets:'30 min'}]},
+  ]},
+];
+DAYS.forEach(d => { d.total = d.sections.reduce((s,sec) => s + sec.exs.length, 0); });
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentDay  = -1;
+let checked     = new Set();
+let weights     = {};
+let workoutDone = false;
+let cache       = {};
+let autoSaveT   = null;
+let weightSaveT = null;
+
+// ── GLOBAL TIMER ─────────────────────────────────────────────────────────────
+// Persists in localStorage so it survives app close/reopen
+// Keeps ticking across screen navigation
+const GT = {
+  running: false, elapsed: 0, startMs: null, dayIdx: -1, _iv: null,
+  load() {
+    try {
+      const s = JSON.parse(localStorage.getItem('gtimer') || 'null');
+      if (!s) return;
+      this.elapsed = s.elapsed || 0;
+      this.dayIdx  = s.dayIdx  !== undefined ? s.dayIdx : -1;
+      this.running = s.running || false;
+      this.startMs = s.startMs || null;
+      // Catch up time elapsed while app was closed
+      if (this.running && this.startMs) {
+        this.elapsed += Math.floor((Date.now() - this.startMs) / 1000);
+        this.startMs  = Date.now();
+      }
+    } catch(e) {}
+  },
+  save() {
+    localStorage.setItem('gtimer', JSON.stringify({
+      elapsed: this.elapsed, dayIdx: this.dayIdx,
+      running: this.running, startMs: this.startMs,
+    }));
+  },
+  seconds() {
+    if (this.running && this.startMs)
+      return this.elapsed + Math.floor((Date.now() - this.startMs) / 1000);
+    return this.elapsed;
+  },
+  start(dayIdx) {
+    if (this.running) return;
+    if (this.dayIdx !== dayIdx) {
+      // Different day — save old timer progress then reset
+      if (this.dayIdx >= 0) persistTimerForDay(this.dayIdx);
+      this.elapsed = 0; this.dayIdx = dayIdx;
     }
-  } catch(e) {
-    console.warn('Firebase offline, usando localStorage', e);
-    checkedTopics = JSON.parse(localStorage.getItem('checkedTopics') || '{}');
-    quizStreak = parseInt(localStorage.getItem('quizStreak') || '0');
-    lastStudyDay = localStorage.getItem('lastStudyDay') || '';
-    chapterData = JSON.parse(localStorage.getItem('chapterData') || '{}');
-    dayChecks = JSON.parse(localStorage.getItem('dayChecks') || '{}');
+    this.running = true; this.startMs = Date.now();
+    this.save(); this._tick();
+  },
+  pause() {
+    if (!this.running) return;
+    this.elapsed = this.seconds(); this.startMs = null; this.running = false;
+    this.save(); updateGlobalBar();
+  },
+  reset() {
+    this.pause();
+    this.elapsed = 0; this.startMs = null; this.dayIdx = -1;
+    clearInterval(this._iv); this._iv = null;
+    this.save(); updateGlobalBar(); refreshTimerDisplay();
+  },
+  _tick() {
+    if (this._iv) return;
+    this._iv = setInterval(() => {
+      this.save();
+      updateGlobalBar();
+      refreshTimerDisplay();
+    }, 1000);
+  },
+};
+
+function updateGlobalBar() {
+  const bar = document.getElementById('gtbar');
+  const onHome = document.getElementById('screen-home').classList.contains('active');
+  const active = GT.dayIdx >= 0 && (GT.running || GT.elapsed > 0) && onHome;
+  bar.classList.toggle('on', active);
+  document.querySelectorAll('.screen').forEach(s => s.style.paddingTop = active ? '40px' : '0');
+  if (active) {
+    document.getElementById('gtbar-time').textContent = fmtTime(GT.seconds());
+    document.getElementById('gtbar-day').textContent  = DAYS[GT.dayIdx]?.name || '';
   }
 }
 
-async function saveToFirebase() {
-  localStorage.setItem('checkedTopics', JSON.stringify(checkedTopics));
-  localStorage.setItem('quizStreak', quizStreak);
-  localStorage.setItem('lastStudyDay', lastStudyDay);
-  localStorage.setItem('dayChecks', JSON.stringify(dayChecks));
-  localStorage.setItem('chapterData', JSON.stringify(chapterData));
+function refreshTimerDisplay() {
+  const el = document.getElementById('timer-display');
+  if (!el || currentDay < 0) return;
+  el.textContent = fmtTime(GT.dayIdx === currentDay ? GT.seconds() : (cache[currentDay]?.durationSeconds || 0));
+}
+
+function persistTimerForDay(dayIdx) {
+  if (dayIdx < 0) return;
+  const secs = GT.seconds();
+  if (secs > 0) {
+    db.collection('treino_sessions').doc(sessionId(dayIdx))
+      .set({ durationSeconds: secs }, { merge: true }).catch(() => {});
+  }
+}
+
+// ── Firestore ─────────────────────────────────────────────────────────────────
+function sessionId(dayIdx) { return `${deviceId}_${getWeekStart()}_d${dayIdx}`; }
+function weightsId()       { return `${deviceId}_weights`; }
+
+function setSyncing(on) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if (dot) dot.className = on ? 'sync-dot syncing' : 'sync-dot';
+  if (lbl) lbl.textContent = on ? 'Sincronizando...' : 'Sincronizado';
+}
+
+async function loadAll() {
+  setSyncing(true);
   try {
-    if (db && window._fbSetDoc && window._fbDoc) {
-      await window._fbSetDoc(window._fbDoc(db, 'progresso', 'ana'), {
-        checkedTopics, quizStreak, lastStudyDay, chapterData, dayChecks,
-        updatedAt: new Date().toISOString()
-      });
-    }
-  } catch(e) { console.warn('Erro ao salvar no Firebase', e); }
+    const [wSnap, ...snaps] = await Promise.all([
+      db.collection('treino_weights').doc(weightsId()).get(),
+      ...DAYS.map((_,i) => db.collection('treino_sessions').doc(sessionId(i)).get()),
+    ]);
+    if (wSnap.exists) weights = wSnap.data().weights || {};
+    snaps.forEach((snap, i) => { if (snap.exists) cache[i] = snap.data(); });
+  } catch(e) {}
+  setSyncing(false);
 }
 
-// ─── STATE ─────────────────────────────────────────────────────
-let checkedTopics = {};
-let selectedQuizTopic = null;
-let selectedDiff = 'fácil';
-let currentQuestion = ''; // legacy, não usado
-let quizStreak = 0;
-let lastStudyDay = '';
-
-// ─── INIT ──────────────────────────────────────────────────────
-async function init() {
-  renderModules();
-  renderQuizTopics();
-  renderSchedule();
-  renderChapters();
-  renderMapSelector();
-  renderMap();
-  updateStats();
-  document.getElementById('streak-num').textContent = '...';
-  await initFirebase();
-  renderModules();
-  renderChapters();
-  renderSchedule();
-  updateStats();
-  checkStreak();
+async function saveSession(dayIdx, data) {
+  setSyncing(true);
+  try { await db.collection('treino_sessions').doc(sessionId(dayIdx)).set(data, { merge: true }); }
+  catch(e) {}
+  setSyncing(false);
 }
 
-function checkStreak() {
-  const today = new Date().toDateString();
-  if (lastStudyDay !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    if (lastStudyDay !== yesterday) quizStreak = 0;
+async function saveWeights() {
+  try { await db.collection('treino_weights').doc(weightsId()).set({ weights }, { merge: false }); }
+  catch(e) {}
+}
+
+// ── Checklist ─────────────────────────────────────────────────────────────────
+function toggleEx(id) {
+  if (workoutDone) return;
+  checked.has(id) ? checked.delete(id) : checked.add(id);
+  document.querySelector(`[data-id="${id}"]`)?.classList.toggle('checked', checked.has(id));
+  updateProgress();
+  scheduleSessionSave();
+}
+
+function updateProgress() {
+  const total = DAYS[currentDay].total, done = checked.size;
+  document.getElementById('progress-count').textContent = `${done} / ${total}`;
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = (total > 0 ? Math.round(done/total*100) : 0) + '%';
+  fill.classList.toggle('full', done === total);
+  const btn = document.getElementById('finish-btn');
+  if (!workoutDone) btn.disabled = done === 0;
+}
+
+function scheduleSessionSave() {
+  if (autoSaveT) clearTimeout(autoSaveT);
+  autoSaveT = setTimeout(() => {
+    const secs = GT.dayIdx === currentDay ? GT.seconds() : (cache[currentDay]?.durationSeconds || 0);
+    const data = {
+      deviceId, dayIndex: currentDay, dayName: DAYS[currentDay].name,
+      weekStart: getWeekStart(), checkedExercises: [...checked],
+      durationSeconds: secs, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    saveSession(currentDay, data);
+    cache[currentDay] = { ...(cache[currentDay] || {}), ...data };
+  }, 1200);
+}
+
+function onWeightChange(exId, val) {
+  weights[exId] = val;
+  if (weightSaveT) clearTimeout(weightSaveT);
+  weightSaveT = setTimeout(saveWeights, 1500);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateGlobalBar();
+}
+
+function goHome() {
+  if (GT.dayIdx >= 0) persistTimerForDay(GT.dayIdx);
+  currentDay = -1; workoutDone = false;
+  renderHome(); show('screen-home');
+}
+
+async function openDay(idx) {
+  currentDay = idx; workoutDone = false; checked = new Set();
+  const day = DAYS[idx];
+
+  setSyncing(true);
+  const snap = await db.collection('treino_sessions').doc(sessionId(idx)).get();
+  if (snap.exists) {
+    cache[idx] = snap.data();
+    (snap.data().checkedExercises || []).forEach(id => checked.add(id));
+    if (snap.data().completed) workoutDone = true;
   }
-  document.getElementById('streak-num').textContent = quizStreak;
-}
+  setSyncing(false);
 
-function bumpStreak() {
-  const today = new Date().toDateString();
-  if (lastStudyDay !== today) {
-    quizStreak++;
-    lastStudyDay = today;
-    document.getElementById('streak-num').textContent = quizStreak;
-    saveToFirebase();
-  }
-}
+  document.getElementById('wn-label').textContent = `Treino ${day.treino} — ${day.name}`;
+  document.getElementById('wn-title').textContent  = day.title;
 
-// ─── MODULES ───────────────────────────────────────────────────
-function renderModules() {
-  const grid = document.getElementById('modules-grid');
-  grid.innerHTML = MODULES.map(m => {
-    const done = m.topics.filter((_, i) => checkedTopics[m.id + '-' + i]).length;
-    const pct = Math.round((done / m.topics.length) * 100);
-    return `
-      <div class="module-card" style="--mod-color:var(${m.color});--mod-bg:var(${m.bg})">
-        <div class="module-header" onclick="toggleTopics('${m.id}')">
-          <div class="module-icon">${m.icon}</div>
-          <div class="module-info">
-            <div class="module-name">${m.name}</div>
-            <div class="module-topics">${m.topics.length} tópicos · ${done} concluídos</div>
+  const timerSecs = GT.dayIdx === idx ? GT.seconds() : (cache[idx]?.durationSeconds || 0);
+  const tDisp = document.getElementById('timer-display');
+  const tBtn  = document.getElementById('timer-btn');
+  tDisp.textContent = fmtTime(timerSecs);
+  tDisp.className   = 'timer-display' + (workoutDone ? ' finished' : (GT.running && GT.dayIdx === idx ? ' running' : ''));
+  tBtn.textContent  = workoutDone ? 'Concluído' : (GT.running && GT.dayIdx === idx ? 'Pausar' : (timerSecs > 0 ? 'Continuar' : 'Iniciar'));
+  tBtn.disabled     = workoutDone;
+
+  document.getElementById('exercise-list').innerHTML = day.sections.map(sec => `
+    <div class="ex-section">
+      <div class="ex-sec-title">${sec.name}</div>
+      ${sec.exs.map(ex => `
+        <div class="ex-item ${checked.has(ex.id) ? 'checked' : ''}" data-id="${ex.id}">
+          <div class="ex-check" onclick="toggleEx('${ex.id}')">
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <div style="font-size:20px;color:var(${m.color})">${pct === 100 ? '✅' : '›'}</div>
+          <div class="ex-info">
+            <div class="ex-name">${ex.name}</div>
+            <div class="ex-sets">${ex.sets}</div>
+          </div>
+          <div class="weight-wrap">
+            <input class="weight-input" type="number" min="0" step="0.5" placeholder="kg"
+              value="${weights[ex.id] || ''}"
+              oninput="onWeightChange('${ex.id}', this.value)"
+              onclick="event.stopPropagation()" />
+            <span class="weight-unit">kg</span>
+          </div>
         </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-        <div class="progress-label"><span>${pct}% completo</span><span>${done}/${m.topics.length}</span></div>
-        <div class="topics-list" id="topics-${m.id}">
-          ${m.topics.map((t, i) => {
-            const key = m.id + '-' + i;
-            const done = !!checkedTopics[key];
-            return `<div class="topic-item" onclick="toggleCheck('${key}', event)">
-              <div class="topic-check ${done ? 'done' : ''}" id="check-${key}">${done ? '✓' : ''}</div>
-              <span style="${done ? 'text-decoration:line-through;opacity:0.5' : ''}" id="label-${key}">${t}</span>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
+      `).join('')}
+    </div>
+  `).join('');
+
+  updateProgress();
+  const finBtn = document.getElementById('finish-btn');
+  const undoBtn = document.getElementById('undo-btn');
+  if (workoutDone) { finBtn.textContent = 'Treino já concluído!'; finBtn.disabled = true; finBtn.className = 'finish-btn done'; undoBtn.className = 'undo-btn show'; }
+  else { finBtn.textContent = 'Finalizar Treino'; finBtn.disabled = checked.size === 0; finBtn.className = 'finish-btn'; undoBtn.className = 'undo-btn'; }
+
+  show('screen-workout');
+}
+
+// ── Timer controls ────────────────────────────────────────────────────────────
+function toggleTimer() {
+  if (workoutDone) return;
+  const tDisp = document.getElementById('timer-display');
+  const tBtn  = document.getElementById('timer-btn');
+  if (GT.running && GT.dayIdx === currentDay) {
+    GT.pause();
+    tBtn.textContent = 'Continuar';
+    tDisp.classList.remove('running');
+  } else {
+    GT.start(currentDay);
+    tBtn.textContent = 'Pausar';
+    tDisp.classList.add('running');
+  }
+}
+
+function resetTimer() {
+  GT.reset();
+  const tDisp = document.getElementById('timer-display');
+  tDisp.textContent = '00:00';
+  tDisp.className = 'timer-display';
+  document.getElementById('timer-btn').textContent = 'Iniciar';
+}
+
+// ── Finish ────────────────────────────────────────────────────────────────────
+async function finishWorkout() {
+  if (workoutDone) return;
+  GT.pause();
+  const secs = GT.dayIdx === currentDay ? GT.elapsed : 0;
+  const day  = DAYS[currentDay];
+  workoutDone = true;
+
+  const tDisp = document.getElementById('timer-display');
+  tDisp.classList.remove('running'); tDisp.classList.add('finished');
+  document.getElementById('timer-btn').textContent = 'Concluído';
+  document.getElementById('timer-btn').disabled = true;
+
+  // Clear global timer after finishing
+  GT.elapsed = 0; GT.dayIdx = -1; GT.startMs = null; GT.running = false;
+  clearInterval(GT._iv); GT._iv = null; GT.save(); updateGlobalBar();
+
+  setSyncing(true);
+  await saveSession(currentDay, {
+    deviceId, dayIndex: currentDay, dayName: day.name, title: day.title,
+    weekStart: getWeekStart(), checkedExercises: [...checked],
+    durationSeconds: secs, exercisesDone: checked.size, exercisesTotal: day.total,
+    completed: true, completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  setSyncing(false);
+  cache[currentDay] = { completed: true, durationSeconds: secs, exercisesDone: checked.size, exercisesTotal: day.total };
+
+  document.getElementById('sum-sub').textContent       = `${day.name} — ${day.title}`;
+  document.getElementById('sum-duration').textContent  = fmtTime(secs);
+  document.getElementById('sum-exercises').textContent = `${checked.size}/${day.total}`;
+  show('screen-summary');
+}
+
+async function undoFinish() {
+  workoutDone = false;
+  const day = DAYS[currentDay];
+  setSyncing(true);
+  await saveSession(currentDay, {
+    deviceId, dayIndex: currentDay, dayName: day.name,
+    weekStart: getWeekStart(), checkedExercises: [...checked],
+    completed: false, durationSeconds: 0,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  setSyncing(false);
+  cache[currentDay] = { ...cache[currentDay], completed: false };
+
+  // Restore timer UI
+  const tDisp = document.getElementById('timer-display');
+  tDisp.classList.remove('finished');
+  tDisp.textContent = '00:00';
+  document.getElementById('timer-btn').textContent = 'Iniciar';
+  document.getElementById('timer-btn').disabled = false;
+
+  const finBtn = document.getElementById('finish-btn');
+  finBtn.textContent = 'Finalizar Treino';
+  finBtn.disabled = checked.size === 0;
+  finBtn.className = 'finish-btn';
+  document.getElementById('undo-btn').className = 'undo-btn';
+}
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const todayIdx = todayDayIdx();
+  const banner = document.getElementById('today-banner');
+  if (todayIdx === -1) {
+    banner.className = 'today-banner rest'; banner.onclick = null;
+    document.getElementById('today-label').textContent = 'Domingo';
+    document.getElementById('today-name').textContent  = 'Dia de descanso';
+    document.getElementById('today-sub').textContent   = 'Você merece descansar hoje!';
+    document.getElementById('today-arrow').style.background = 'var(--surface2)';
+  } else {
+    const day = DAYS[todayIdx], cached = cache[todayIdx];
+    banner.className = 'today-banner'; banner.onclick = () => openDay(todayIdx);
+    document.getElementById('today-label').textContent = 'Treino de hoje';
+    document.getElementById('today-name').textContent  = `${day.name} — Treino ${day.treino}`;
+    document.getElementById('today-sub').textContent   = cached?.completed
+      ? `Concluído em ${fmtTime(cached.durationSeconds||0)} — ${day.title}` : day.title;
+    document.getElementById('today-arrow').style.background = 'var(--accent)';
+  }
+  document.getElementById('week-grid').innerHTML = DAYS.map((day, i) => {
+    const isToday = i === todayIdx, cached = cache[i];
+    const isDone  = cached?.completed;
+    const isGT    = GT.dayIdx === i && (GT.running || GT.elapsed > 0);
+    const dur     = isDone ? fmtTime(cached.durationSeconds||0) : (isGT ? fmtTime(GT.seconds()) : null);
+    return `<div class="day-card ${isToday?'today':''} ${isDone?'done':''} ${isGT?'active-timer':''}" onclick="openDay(${i})">
+      ${isDone ? '<div class="dc-status">✓</div>' : ''}
+      <div class="dc-short">${day.short}</div>
+      <div class="dc-name">${day.name}</div>
+      <span class="dc-tag ${day.tag}">Treino ${day.treino}</span>
+      ${dur ? `<div class="dc-duration">${dur}</div>` : ''}
+    </div>`;
   }).join('');
 }
 
-function toggleTopics(id) {
-  const el = document.getElementById('topics-' + id);
-  el.classList.toggle('open');
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtTime(s) {
+  s = Math.max(0, Math.floor(s||0));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
+  return h>0 ? `${h}h${String(m).padStart(2,'0')}m` : `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
 }
 
-function toggleCheck(key, e) {
-  e.stopPropagation();
-  checkedTopics[key] = !checkedTopics[key];
-  saveToFirebase();
-  const check = document.getElementById('check-' + key);
-  const label = document.getElementById('label-' + key);
-  if (checkedTopics[key]) {
-    check.classList.add('done'); check.textContent = '✓';
-    label.style.textDecoration = 'line-through'; label.style.opacity = '0.5';
-    bumpStreak();
-  } else {
-    check.classList.remove('done'); check.textContent = '';
-    label.style.textDecoration = ''; label.style.opacity = '';
-  }
-  updateStats();
-  renderModules();
-  const el = document.querySelectorAll('.topics-list.open');
-  el.forEach(x => { /* keep open */ });
-}
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async () => {
+  GT.load();
+  if (GT.running) GT._tick();
+  updateGlobalBar();
+  await loadAll();
+  renderHome();
+})();
 
-function updateStats() {
-  const total = MODULES.reduce((s, m) => s + m.topics.length, 0);
-  const done = Object.values(checkedTopics).filter(Boolean).length;
-  document.getElementById('total-done').textContent = done;
-  document.getElementById('total-topics').textContent = total;
-  document.getElementById('total-pct').textContent = Math.round((done/total)*100) + '%';
-}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { GT.save(); if (GT.dayIdx >= 0) persistTimerForDay(GT.dayIdx); }
+});
 
-// ─── QUIZ ──────────────────────────────────────────────────────
-let currentQData = null;
-let questionCount = 0;
-let correctCount = 0;
-let scorePills = [];
-
-function renderQuizTopics() {
-  const grid = document.getElementById('quiz-topics');
-  grid.innerHTML = QUIZ_TOPICS.map(t =>
-    `<button class="topic-btn" onclick="selectQuizTopic(this,'${t.id}','${t.label}')">
-      ${t.icon} ${t.label.replace(t.icon + ' ', '')}
-    </button>`
-  ).join('');
-}
-
-function selectQuizTopic(btn, id, label) {
-  document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedQuizTopic = { id, label };
-}
-
-function selectDiff(btn, diff) {
-  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedDiff = diff;
-}
-
-async function startQuiz() {
-  if (!selectedQuizTopic) { alert('Escolha um tema primeiro!'); return; }
-  questionCount = 0; correctCount = 0; scorePills = [];
-  document.getElementById('score-pills').innerHTML = '';
-  document.getElementById('score-correct').textContent = '0';
-  document.getElementById('score-total').textContent = '0';
-  document.getElementById('quiz-setup').style.display = 'none';
-  document.getElementById('quiz-active').style.display = 'block';
-  document.getElementById('quiz-topic-label').textContent = selectedQuizTopic.label + ' · ' + selectedDiff;
-  await loadNextQuestion();
-}
-
-async function loadNextQuestion() {
-  document.getElementById('feedback-box').classList.remove('show');
-  document.getElementById('alternatives-area').innerHTML = '';
-  document.getElementById('q-num-label').textContent = 'Questão ' + (questionCount + 1);
-  document.getElementById('question-text').innerHTML =
-    `<div style="display:flex;align-items:center;gap:10px">Gerando questão <div class="loading-dots"><span></span><span></span><span></span></div></div>`;
-  currentQData = await generateQuestion();
-  if (!currentQData) return;
-  document.getElementById('question-text').textContent = currentQData.enunciado;
-  renderAlternatives();
-}
-
-async function callClaude(prompt, maxTokens = 900) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!res.ok) throw new Error('API error: ' + res.status);
-  const data = await res.json();
-  return data.content[0].text.trim();
-}
-
-async function generateQuestion() {
-  const topicMap = {
-    'arte-edu': 'Arte-Educação: Abordagem Triangular de Ana Mae Barbosa, leitura de imagem, contextualização histórica, fazer artístico, Nise da Silveira, Herbert Read',
-    'bncc': 'BNCC e PCN de Arte: estrutura, competências gerais, habilidades por ano escolar, linguagens artísticas (visuais, dança, música, teatro, artes integradas)',
-    'historia': 'História da Arte: movimentos artísticos (pré-história ao contemporâneo), artistas brasileiros, Modernismo, Semana de 22, Tarsila do Amaral, Di Cavalcanti',
-    'didatica': 'Didática e Metodologia no ensino de Arte: planejamento, sequência didática, avaliação formativa, mediação cultural, portfólio',
-    'psicologia': 'Psicologia da Educação: Piaget (estágios), Vygotsky (ZDP), Lowenfeld (desenvolvimento artístico infantil), múltiplas inteligências de Gardner',
-    'legislacao': 'Legislação Educacional: LDB 9.394/96 (artigos essenciais), ECA, PNE, Estatuto do Professor, educação inclusiva Lei 13.146/2015',
-  };
-  const fullTopic = topicMap[selectedQuizTopic.id] || selectedQuizTopic.label;
-  try {
-    const prompt = `Você é examinador de concurso público para Professor de Arte PEB II no Paraná, Brasil.
-
-Crie UMA questão de múltipla escolha de dificuldade ${selectedDiff} sobre: ${fullTopic}.
-
-Regras:
-- Enunciado claro, entre 2 e 5 linhas, estilo concurso público
-- 5 alternativas (A, B, C, D, E), apenas UMA correta
-- As alternativas incorretas devem ser plausíveis (não óbvias)
-- A alternativa correta deve variar (não seja sempre A ou B)
-- Explicação didática da resposta correta: por que está certa e por que as outras estão erradas (3-5 linhas)
-
-Responda SOMENTE com JSON válido, sem texto antes nem depois, sem markdown:
-{
-  "enunciado": "texto completo da questão",
-  "alternativas": {
-    "A": "texto da alternativa A",
-    "B": "texto da alternativa B",
-    "C": "texto da alternativa C",
-    "D": "texto da alternativa D",
-    "E": "texto da alternativa E"
-  },
-  "correta": "A",
-  "explicacao": "explicação completa e didática da resposta"
-}`;
-    const raw = (await callClaude(prompt, 900)).replace(/```json|```/g, '').trim();
-    return JSON.parse(raw);
-  } catch(e) {
-    document.getElementById('question-text').textContent = 'Erro ao gerar questão. Tente novamente.';
-    return null;
-  }
-}
-
-function renderAlternatives() {
-  if (!currentQData) return;
-  const area = document.getElementById('alternatives-area');
-  area.innerHTML = ['A','B','C','D','E'].map(l =>
-    `<button class="alt-btn" id="alt-${l}" onclick="selectAnswer('${l}')">
-      <span class="alt-letter">${l}</span>
-      <span>${currentQData.alternativas[l]}</span>
-    </button>`
-  ).join('');
-}
-
-function selectAnswer(letter) {
-  if (!currentQData) return;
-  const correct = currentQData.correta;
-  questionCount++;
-  const isRight = letter === correct;
-  if (isRight) correctCount++;
-
-  // Disable all + highlight
-  ['A','B','C','D','E'].forEach(l => {
-    const btn = document.getElementById('alt-' + l);
-    btn.disabled = true;
-    if (l === correct) btn.classList.add(l === letter ? 'correct' : 'reveal');
-    else if (l === letter) btn.classList.add('wrong');
-  });
-
-  // Score pills
-  scorePills.push(isRight);
-  const pillsEl = document.getElementById('score-pills');
-  pillsEl.innerHTML = scorePills.map((r, i) =>
-    `<div class="score-pill ${r ? 'c' : 'w'}" title="Q${i+1}">${r ? '✓' : '✗'}</div>`
-  ).join('');
-  document.getElementById('score-correct').textContent = correctCount;
-  document.getElementById('score-total').textContent = questionCount;
-
-  // Feedback
-  const resultColor = isRight ? 'var(--green)' : 'var(--pink)';
-  const resultIcon = isRight ? '✅' : '❌';
-  const resultMsg = isRight ? 'Resposta correta!' : `Resposta incorreta. A correta era <strong>${correct}</strong>.`;
-  document.getElementById('feedback-text').innerHTML =
-    `<div style="font-size:15px;font-weight:800;color:${resultColor};margin-bottom:10px">${resultIcon} ${resultMsg}</div>
-     <h4 style="color:var(--blue)">📖 Explicação</h4>
-     <p>${currentQData.explicacao}</p>`;
-  document.getElementById('feedback-box').classList.add('show');
-  document.getElementById('feedback-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  bumpStreak();
-}
-
-function nextQuestion() {
-  loadNextQuestion();
-}
-
-function resetQuiz() {
-  document.getElementById('quiz-setup').style.display = 'block';
-  document.getElementById('quiz-active').style.display = 'none';
-}
-
-// ─── SCHEDULE ──────────────────────────────────────────────────
-function toggleDayCheck(dayKey, dayIndex) {
-  dayChecks[dayKey] = !dayChecks[dayKey];
-  saveDayChecks();
-  renderSchedule();
-  document.getElementById('day-' + dayIndex).classList.add('open');
-  bumpStreak();
-}
-
-function toggleSlotCheck(slotKey, dayKey, dayIndex, totalSlots) {
-  dayChecks[slotKey] = !dayChecks[slotKey];
-  // Se todos os slots marcados, marca o dia também
-  const allDone = Array.from({length: totalSlots}, (_, i) => dayKey + '-slot-' + i).every(k => dayChecks[k]);
-  if (allDone) dayChecks[dayKey] = true;
-  else dayChecks[dayKey] = false;
-  saveDayChecks();
-  renderSchedule();
-  document.getElementById('day-' + dayIndex).classList.add('open');
-  bumpStreak();
-}
-
-async function saveDayChecks() {
-  localStorage.setItem('dayChecks', JSON.stringify(dayChecks));
-  try {
-    if (db && window._fbSetDoc && window._fbDoc) {
-      await window._fbSetDoc(window._fbDoc(db, 'progresso', 'ana'), {
-        checkedTopics, quizStreak, lastStudyDay, chapterData, dayChecks,
-        updatedAt: new Date().toISOString()
-      });
-    }
-  } catch(e) { console.warn('Erro ao salvar dayChecks', e); }
-}
-
-function toggleDay(i) {
-  document.getElementById('day-' + i).classList.toggle('open');
-}
-
-// ─── NAVIGATION ────────────────────────────────────────────────
-function showSection(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('section-' + id).classList.add('active');
-  event.target.classList.add('active');
-}
-
-init();
-
-// ─── PWA SETUP ─────────────────────────────────────────────────
-// Inline manifest (no separate file needed)
-const manifest = {
-  name: "Ateliê de Estudos — PEB II Arte",
-  short_name: "Ateliê Arte",
-  description: "Estudos para concurso Professor de Arte PEB II SEED-PR",
-  start_url: "./",
-  display: "standalone",
-  background_color: "#f8f7ff",
-  theme_color: "#7c3aed",
-  orientation: "portrait-primary",
-  icons: [
-    { src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%237c3aed'/><text y='130' x='96' text-anchor='middle' font-size='110' font-family='serif'>🎨</text></svg>`), sizes: "192x192", type: "image/svg+xml" },
-    { src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%237c3aed'/><text y='360' x='256' text-anchor='middle' font-size='300' font-family='serif'>🎨</text></svg>`), sizes: "512x512", type: "image/svg+xml" }
-  ]
-};
-const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
-document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
-
-// Service Worker para funcionar offline
 if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE = 'atelie-v1';
-    const URLS = ['/'];
-    self.addEventListener('install', e => {
-      e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS).catch(()=>{})));
-      self.skipWaiting();
-    });
-    self.addEventListener('activate', e => {
-      e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
-      self.clients.claim();
-    });
-    self.addEventListener('fetch', e => {
-      e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-    });
-  `;
-  const swBlob = new Blob([swCode], {type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
-}
-
-// Banner de instalação
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const banner = document.getElementById('install-banner');
-  if (banner) banner.style.display = 'flex';
-});
-window.addEventListener('appinstalled', () => {
-  const banner = document.getElementById('install-banner');
-  if (banner) banner.style.display = 'none';
-});
-function installApp() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-    document.getElementById('install-banner').style.display = 'none';
-  }
+  window.addEventListener('load', () => navigator.serviceWorker.register('/meu-treino/sw.js').catch(() => {}));
 }
 </script>
-<!-- Banner de instalação PWA -->
-<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;
-  background:linear-gradient(135deg,#7c3aed,#db2777);color:white;
-  padding:14px 20px;align-items:center;gap:12px;
-  box-shadow:0 -4px 20px rgba(124,58,237,0.3);">
-  <span style="font-size:24px">🎨</span>
-  <div style="flex:1">
-    <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:14px">Instalar Ateliê de Estudos</div>
-    <div style="font-family:'Nunito',sans-serif;font-size:12px;opacity:0.85">Adicione à tela inicial para acessar como app!</div>
-  </div>
-  <button onclick="installApp()" style="background:white;color:#7c3aed;border:none;border-radius:8px;
-    padding:8px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;
-    white-space:nowrap">Instalar</button>
-  <button onclick="document.getElementById('install-banner').style.display='none'"
-    style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 4px;opacity:0.7">✕</button>
-</div>
 </body>
 </html>
